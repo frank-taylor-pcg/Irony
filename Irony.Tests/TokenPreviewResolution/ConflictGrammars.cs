@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Tests.TokenPreviewResolution {
+namespace Irony.Tests.TokenPreviewResolution
+{
 
   [Language("Grammar with conflicts, no hints", "1.1", "Grammar with conflicts, no hints.")]
-  public class ConflictGrammarNoHints : Grammar {
+  public class ConflictGrammarNoHints : Grammar
+  {
     public ConflictGrammarNoHints()
-      : base(true) {
+      : base(true)
+    {
       var name = new IdentifierTerminal("id");
 
       var stmt = new NonTerminal("Statement");
@@ -46,8 +46,10 @@ namespace Irony.Tests.TokenPreviewResolution {
   }
 
   [Language("Grammar with conflicts #2", "1.1", "Conflict grammar with hints added to productions.")]
-  public class ConflictGrammarWithHintsInRules : Grammar {
-    public ConflictGrammarWithHintsInRules()  : base(true) {
+  public class ConflictGrammarWithHintsInRules : Grammar
+  {
+    public ConflictGrammarWithHintsInRules() : base(true)
+    {
       var name = new IdentifierTerminal("id");
 
       var definition = new NonTerminal("definition");
@@ -68,9 +70,11 @@ namespace Irony.Tests.TokenPreviewResolution {
   }//class
 
   [Language("Grammar with conflicts #4", "1.1", "Test conflict grammar with conflicts and hints: hints are added to non-terminals.")]
-  public class ConflictGrammarWithHintsOnTerms : Grammar {
+  public class ConflictGrammarWithHintsOnTerms : Grammar
+  {
     public ConflictGrammarWithHintsOnTerms()
-      : base(true) {
+      : base(true)
+    {
       var name = new IdentifierTerminal("id");
 
       var stmt = new NonTerminal("Statement");

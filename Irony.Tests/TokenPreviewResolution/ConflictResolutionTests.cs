@@ -1,11 +1,8 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
-
 using Irony.Parsing;
+using System.Linq;
 
-namespace Irony.Tests.TokenPreviewResolution {
+namespace Irony.Tests.TokenPreviewResolution
+{
 #if USE_NUNIT
   using NUnit.Framework;
   using TestClass = NUnit.Framework.TestFixtureAttribute;
@@ -16,13 +13,14 @@ namespace Irony.Tests.TokenPreviewResolution {
 #endif
 
   [TestClass]
-  public class ConflictResolutionTests {
+  public class ConflictResolutionTests
+  {
 
     // samples to be parsed
     const string FieldSample = "private int SomeField;";
     const string PropertySample = "public string Name {}";
     const string FieldListSample = "private int Field1; public string Field2;";
-  const string MixedListSample = @"
+    const string MixedListSample = @"
       public int Size {}
       private string TableName;
       override void Run()
@@ -31,7 +29,8 @@ namespace Irony.Tests.TokenPreviewResolution {
 
     // Full grammar, no hints - expect errors ---------------------------------------------------------------------
     [TestMethod]
-    public void TestConflictGrammarNoHints_HasErrors() {
+    public void TestConflictGrammarNoHints_HasErrors()
+    {
       var grammar = new ConflictGrammarNoHints();
       var parser = new Parser(grammar);
       Assert.IsTrue(parser.Language.Errors.Count > 0);
@@ -44,7 +43,8 @@ namespace Irony.Tests.TokenPreviewResolution {
 
     // Hints in Rules --------------------------------------------------------------------------
     [TestMethod]
-    public void TestConflictGrammarWithHintsOnRules() {
+    public void TestConflictGrammarWithHintsOnRules()
+    {
       var grammar = new ConflictGrammarWithHintsInRules();
       var parser = new Parser(grammar);
       Assert.IsTrue(parser.Language.Errors.Count == 0);
@@ -81,7 +81,8 @@ namespace Irony.Tests.TokenPreviewResolution {
 
     //Hints on terms ---------------------------------------------------------------------
     [TestMethod]
-    public void TestConflictGrammar_HintsOnTerms() {
+    public void TestConflictGrammar_HintsOnTerms()
+    {
       var grammar = new ConflictGrammarWithHintsOnTerms();
       var parser = new Parser(grammar);
       Assert.IsTrue(parser.Language.Errors.Count == 0);

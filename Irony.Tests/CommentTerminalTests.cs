@@ -1,24 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
   [TestClass]
-  public class CommentTerminalTests {
+  public class CommentTerminalTests
+  {
 
     [TestMethod]
-    public void TestCommentTerminal() {
-      Parser parser; Token token; 
+    public void TestCommentTerminal()
+    {
+      Parser parser; Token token;
 
       parser = TestHelper.CreateParser(new CommentTerminal("Comment", "/*", "*/"));
       token = parser.ParseInput("/* abc  */");

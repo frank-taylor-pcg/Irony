@@ -12,9 +12,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
   #region About compound terminals
   /*
    As  it turns out, many terminal types in real-world languages have 3-part structure: prefix-body-suffix
@@ -37,16 +37,17 @@ namespace Irony.Parsing {
 */
   #endregion
 
-
   public class EscapeTable : Dictionary<char, char> { }
 
-  public abstract class CompoundTerminalBase : Terminal {
+  public abstract class CompoundTerminalBase : Terminal
+  {
 
     #region Nested classes
     protected class ScanFlagTable : Dictionary<string, short> { }
     protected class TypeCodeTable : Dictionary<string, TypeCode[]> { }
 
-    public class CompoundTokenDetails {
+    public class CompoundTokenDetails
+    {
       public string Prefix;
       public string Body;
       public string Suffix;
@@ -64,8 +65,9 @@ namespace Irony.Parsing {
       public bool PartialContinues;
       public byte SubTypeIndex; //used for string literal kind
       //Flags helper method
-      public bool IsSet(short flag) {
-        return (Flags & flag) != 0; 
+      public bool IsSet(short flag)
+      {
+        return (Flags & flag) != 0;
       }
       public string Text { get { return Prefix + Body + Suffix; } }
     }
@@ -74,16 +76,19 @@ namespace Irony.Parsing {
 
     #region constructors and initialization
     public CompoundTerminalBase(string name) : this(name, TermFlags.None) { }
-    public CompoundTerminalBase(string name, TermFlags flags) : base(name) {
+    public CompoundTerminalBase(string name, TermFlags flags) : base(name)
+    {
       SetFlag(flags);
       Escapes = GetDefaultEscapes();
     }
 
-    protected void AddPrefixFlag(string prefix, short flags) {
+    protected void AddPrefixFlag(string prefix, short flags)
+    {
       PrefixFlags.Add(prefix, flags);
       Prefixes.Add(prefix);
     }
-    public void AddSuffix(string suffix, params TypeCode[] typeCodes) {
+    public void AddSuffix(string suffix, params TypeCode[] typeCodes)
+    {
       SuffixTypeCodes.Add(suffix, typeCodes);
       Suffixes.Add(suffix);
     }
@@ -93,7 +98,7 @@ namespace Irony.Parsing {
     public Char EscapeChar = '\\';
     public EscapeTable Escapes = new EscapeTable();
     //Case sensitivity for prefixes and suffixes
-    public bool CaseSensitivePrefixesSuffixes = false; 
+    public bool CaseSensitivePrefixesSuffixes = false;
     #endregion
 
 
@@ -108,7 +113,8 @@ namespace Irony.Parsing {
 
 
     #region overrides: Init, TryMatch
-    public override void Init(GrammarData grammarData) {
+    public override void Init(GrammarData grammarData)
+    {
       base.Init(grammarData);
       //collect all suffixes, prefixes in lists and create sets of first chars for both
       Prefixes.Sort(StringList.LongerFirst);
@@ -120,17 +126,20 @@ namespace Irony.Parsing {
         _prefixesFirsts.Add(pfx[0]);
 
       foreach (string sfx in Suffixes)
-        _suffixesFirsts.Add(sfx[0]); 
+        _suffixesFirsts.Add(sfx[0]);
     }//method
 
-    public override IList<string> GetFirsts() {
+    public override IList<string> GetFirsts()
+    {
       return Prefixes;
     }
 
-    public override Token TryMatch(ParsingContext context, ISourceStream source) {
+    public override Token TryMatch(ParsingContext context, ISourceStream source)
+    {
       Token token;
       //Try quick parse first, but only if we're not continuing
-      if (context.VsLineScanState.Value == 0) {
+      if (context.VsLineScanState.Value == 0)
+      {
         token = QuickParse(context, source);
         if (token != null) return token;
         source.PreviewPosition = source.Position; //revert the position
@@ -143,56 +152,67 @@ namespace Irony.Parsing {
         ReadPrefix(source, details);
       if (!ReadBody(source, details))
         return null;
-      if (details.Error != null) 
+      if (details.Error != null)
         return context.CreateErrorToken(details.Error);
-      if (details.IsPartial) {
+      if (details.IsPartial)
+      {
         details.Value = details.Body;
-      } else {
+      }
+      else
+      {
         ReadSuffix(source, details);
 
-        if(!ConvertValue(details)) {
+        if (!ConvertValue(details))
+        {
           if (string.IsNullOrEmpty(details.Error))
             details.Error = Resources.ErrInvNumber;
           return context.CreateErrorToken(details.Error); // "Failed to convert the value: {0}"
         }
       }
       token = CreateToken(context, source, details);
-       
-      if (details.IsPartial) {
+
+      if (details.IsPartial)
+      {
         //Save terminal state so we can continue
         context.VsLineScanState.TokenSubType = (byte)details.SubTypeIndex;
         context.VsLineScanState.TerminalFlags = (short)details.Flags;
         context.VsLineScanState.TerminalIndex = this.MultilineIndex;
-      } else
+      }
+      else
         context.VsLineScanState.Value = 0;
-      return token; 
+      return token;
     }
 
-    protected virtual Token CreateToken(ParsingContext context, ISourceStream source, CompoundTokenDetails details) {
+    protected virtual Token CreateToken(ParsingContext context, ISourceStream source, CompoundTokenDetails details)
+    {
       var token = source.CreateToken(this.OutputTerminal, details.Value);
       token.Details = details;
-      if (details.IsPartial) 
+      if (details.IsPartial)
         token.Flags |= TokenFlags.IsIncomplete;
       return token;
     }
 
-    protected virtual void InitDetails(ParsingContext context, CompoundTokenDetails details) {
+    protected virtual void InitDetails(ParsingContext context, CompoundTokenDetails details)
+    {
       details.PartialOk = (context.Mode == ParseMode.VsLineScan);
-      details.PartialContinues = (context.VsLineScanState.Value != 0); 
+      details.PartialContinues = (context.VsLineScanState.Value != 0);
     }
 
-    protected virtual Token QuickParse(ParsingContext context, ISourceStream source) {
+    protected virtual Token QuickParse(ParsingContext context, ISourceStream source)
+    {
       return null;
     }
 
-    protected virtual void ReadPrefix(ISourceStream source, CompoundTokenDetails details) {
+    protected virtual void ReadPrefix(ISourceStream source, CompoundTokenDetails details)
+    {
       if (!_prefixesFirsts.Contains(source.PreviewChar))
         return;
       var comparisonType = CaseSensitivePrefixesSuffixes ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
-      foreach (string pfx in Prefixes) {
+      foreach (string pfx in Prefixes)
+      {
         // Prefixes are usually case insensitive, even if language is case-sensitive. So we cannot use source.MatchSymbol here,
         // we need case-specific comparison
-        if (string.Compare(source.Text, source.PreviewPosition, pfx, 0, pfx.Length, comparisonType) != 0) 
+        if (string.Compare(source.Text, source.PreviewPosition, pfx, 0, pfx.Length, comparisonType) != 0)
           continue;
         //We found prefix
         details.Prefix = pfx;
@@ -200,19 +220,22 @@ namespace Irony.Parsing {
         //Set flag from prefix
         short pfxFlags;
         if (!string.IsNullOrEmpty(details.Prefix) && PrefixFlags.TryGetValue(details.Prefix, out pfxFlags))
-          details.Flags |= (short) pfxFlags;
+          details.Flags |= (short)pfxFlags;
         return;
       }//foreach
     }//method
 
-    protected virtual bool ReadBody(ISourceStream source, CompoundTokenDetails details) {
+    protected virtual bool ReadBody(ISourceStream source, CompoundTokenDetails details)
+    {
       return false;
     }
 
-    protected virtual void ReadSuffix(ISourceStream source, CompoundTokenDetails details) {
+    protected virtual void ReadSuffix(ISourceStream source, CompoundTokenDetails details)
+    {
       if (!_suffixesFirsts.Contains(source.PreviewChar)) return;
       var comparisonType = CaseSensitivePrefixesSuffixes ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
-      foreach (string sfx in Suffixes) {
+      foreach (string sfx in Suffixes)
+      {
         //Suffixes are usually case insensitive, even if language is case-sensitive. So we cannot use source.MatchSymbol here,
         // we need case-specific comparison
         if (string.Compare(source.Text, source.PreviewPosition, sfx, 0, sfx.Length, comparisonType) != 0)
@@ -228,16 +251,18 @@ namespace Irony.Parsing {
       }//foreach
     }//method
 
-    protected virtual bool ConvertValue(CompoundTokenDetails details) {
+    protected virtual bool ConvertValue(CompoundTokenDetails details)
+    {
       details.Value = details.Body;
-      return false; 
+      return false;
     }
 
 
     #endregion
 
     #region utils: GetDefaultEscapes
-    public static EscapeTable GetDefaultEscapes() {
+    public static EscapeTable GetDefaultEscapes()
+    {
       EscapeTable escapes = new EscapeTable();
       escapes.Add('a', '\u0007');
       escapes.Add('b', '\b');

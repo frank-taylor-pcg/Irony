@@ -1,13 +1,15 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
-  public class LineContinuationTerminal : Terminal {
+  public class LineContinuationTerminal : Terminal
+  {
 
-    public LineContinuationTerminal(string name, params string[] startSymbols) : base(name, TokenCategory.Outline) {
+    public LineContinuationTerminal(string name, params string[] startSymbols) : base(name, TokenCategory.Outline)
+    {
       var symbols = startSymbols.Where(s => !IsNullOrWhiteSpace(s)).ToArray();
       StartSymbols = new StringList(symbols);
       if (StartSymbols.Count == 0)
@@ -22,18 +24,21 @@ namespace Irony.Parsing {
 
     #region overrides
 
-    public override void Init(GrammarData grammarData) {
+    public override void Init(GrammarData grammarData)
+    {
       base.Init(grammarData);
 
       // initialize string of start characters for fast lookup
       _startSymbolsFirsts = new String(StartSymbols.Select(s => s.First()).ToArray());
 
-      if (this.EditorInfo == null) {
+      if (this.EditorInfo == null)
+      {
         this.EditorInfo = new TokenEditorInfo(TokenType.Delimiter, TokenColor.Comment, TokenTriggers.None);
       }
     }
 
-    public override Token TryMatch(ParsingContext context, ISourceStream source) {
+    public override Token TryMatch(ParsingContext context, ISourceStream source)
+    {
       // Quick check
       var lookAhead = source.PreviewChar;
       var startIndex = _startSymbolsFirsts.IndexOf(lookAhead);
@@ -53,11 +58,14 @@ namespace Irony.Parsing {
       return context.CreateErrorToken(Resources.ErrNewLineExpected);
     }
 
-    private bool BeginMatch(ISourceStream source, int startFrom, char lookAhead) {
-      foreach (var startSymbol in StartSymbols.Skip(startFrom)) {
+    private bool BeginMatch(ISourceStream source, int startFrom, char lookAhead)
+    {
+      foreach (var startSymbol in StartSymbols.Skip(startFrom))
+      {
         if (startSymbol[0] != lookAhead)
           continue;
-        if (source.MatchSymbol(startSymbol)) {
+        if (source.MatchSymbol(startSymbol))
+        {
           source.PreviewPosition += startSymbol.Length;
           return true;
         }
@@ -65,11 +73,13 @@ namespace Irony.Parsing {
       return false;
     }
 
-    private Token CompleteMatch(ISourceStream source) {
+    private Token CompleteMatch(ISourceStream source)
+    {
       if (source.EOF())
         return null;
 
-      do {
+      do
+      {
         // Match NewLine
         var lookAhead = source.PreviewChar;
         if (LineTerminators.IndexOf(lookAhead) >= 0)
@@ -97,13 +107,15 @@ namespace Irony.Parsing {
       return source.CreateToken(this.OutputTerminal);
     }
 
-    public override IList<string> GetFirsts() {
+    public override IList<string> GetFirsts()
+    {
       return StartSymbols;
     }
 
     #endregion
 
-    private static bool IsNullOrWhiteSpace(string s) {
+    private static bool IsNullOrWhiteSpace(string s)
+    {
 #if VS2008
       if (String.IsNullOrEmpty(s))
         return true;

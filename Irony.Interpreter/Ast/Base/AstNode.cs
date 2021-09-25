@@ -10,28 +10,24 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
-using System.CodeDom;
-using System.Xml;
-using System.IO;
-
 using Irony.Ast;
 using Irony.Parsing;
-using Irony.Interpreter;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
-namespace Irony.Interpreter.Ast {
+namespace Irony.Interpreter.Ast
+{
 
-  public static class CustomExpressionTypes {
-    public const ExpressionType NotAnExpression =(ExpressionType) (-1);
+  public static class CustomExpressionTypes
+  {
+    public const ExpressionType NotAnExpression = (ExpressionType)(-1);
   }
 
   public class AstNodeList : List<AstNode> { }
 
   //Base AST node class
-  public partial class AstNode : IAstNodeInit, IBrowsableAstNode, IVisitableNode {
+  public partial class AstNode : IAstNodeInit, IBrowsableAstNode, IVisitableNode
+  {
     public AstNode Parent;
     public BnfTerm Term;
     public SourceSpan Span { get; set; }
@@ -56,17 +52,19 @@ namespace Irony.Interpreter.Ast {
 
     //Reference to Evaluate method implementation. Initially set to DoEvaluate virtual method. 
     public EvaluateMethod Evaluate;
-    public ValueSetterMethod SetValue; 
+    public ValueSetterMethod SetValue;
 
     // Public default constructor
-    public AstNode() {
+    public AstNode()
+    {
       this.Evaluate = DoEvaluate;
       this.SetValue = DoSetValue;
     }
     public SourceLocation Location { get { return Span.Location; } }
 
     #region IAstNodeInit Members
-    public virtual void Init(AstContext context, ParseTreeNode treeNode) {
+    public virtual void Init(AstContext context, ParseTreeNode treeNode)
+    {
       this.Term = treeNode.Term;
       Span = treeNode.Span;
       ErrorAnchor = this.Location;
@@ -76,19 +74,24 @@ namespace Irony.Interpreter.Ast {
     #endregion
 
     //ModuleNode - computed on demand
-    public AstNode ModuleNode {
-      get {
-        if (_moduleNode == null) {
+    public AstNode ModuleNode
+    {
+      get
+      {
+        if (_moduleNode == null)
+        {
           _moduleNode = (Parent == null) ? this : Parent.ModuleNode;
         }
         return _moduleNode;
       }
       set { _moduleNode = value; }
-    }  AstNode _moduleNode;
+    }
+    AstNode _moduleNode;
 
 
     #region virtual methods: DoEvaluate, SetValue, IsConstant, SetIsTail, GetDependentScopeInfo
-    public virtual void Reset() {
+    public virtual void Reset()
+    {
       _moduleNode = null;
       Evaluate = DoEvaluate;
       foreach (var child in ChildNodes)
@@ -96,85 +99,99 @@ namespace Irony.Interpreter.Ast {
     }
 
     //By default the Evaluate field points to this method.
-    protected virtual object DoEvaluate(ScriptThread thread) {
+    protected virtual object DoEvaluate(ScriptThread thread)
+    {
       //These 2 lines are standard prolog/epilog statements. Place them in every Evaluate and SetValue implementations.
       thread.CurrentNode = this;  //standard prolog
       thread.CurrentNode = Parent; //standard epilog
-      return null; 
+      return null;
     }
 
-    public virtual void DoSetValue(ScriptThread thread, object value) {
+    public virtual void DoSetValue(ScriptThread thread, object value)
+    {
       //Place the prolog/epilog lines in every implementation of SetValue method (see DoEvaluate above)
     }
 
-    public virtual bool IsConstant() {
-      return false; 
+    public virtual bool IsConstant()
+    {
+      return false;
     }
 
     /// <summary>
     /// Sets a flag indicating that the node is in tail position. The value is propagated from parent to children. 
     /// Should propagate this call to appropriate children.
     /// </summary>
-    public virtual void SetIsTail() {
+    public virtual void SetIsTail()
+    {
       Flags |= AstNodeFlags.IsTail;
     }
 
     /// <summary>
     /// Dependent scope is a scope produced by the node. For ex, FunctionDefNode defines a scope
     /// </summary>
-    public virtual ScopeInfo DependentScopeInfo {
-      get {return _dependentScope; }
+    public virtual ScopeInfo DependentScopeInfo
+    {
+      get { return _dependentScope; }
       set { _dependentScope = value; }
-    } ScopeInfo _dependentScope;
+    }
+    ScopeInfo _dependentScope;
 
     #endregion
 
     #region IBrowsableAstNode Members
-    public virtual System.Collections.IEnumerable GetChildNodes() {
+    public virtual System.Collections.IEnumerable GetChildNodes()
+    {
       return ChildNodes;
     }
-    public int Position { 
-      get { return Span.Location.Position; } 
+    public int Position
+    {
+      get { return Span.Location.Position; }
     }
     #endregion
 
     #region Visitors, Iterators
     //the first primitive Visitor facility
-    public virtual void AcceptVisitor(IAstVisitor visitor) {
+    public virtual void AcceptVisitor(IAstVisitor visitor)
+    {
       visitor.BeginVisit(this);
       if (ChildNodes.Count > 0)
-        foreach(AstNode node in ChildNodes)
+        foreach (AstNode node in ChildNodes)
           node.AcceptVisitor(visitor);
       visitor.EndVisit(this);
     }
 
     //Node traversal 
-    public IEnumerable<AstNode> GetAll() {
+    public IEnumerable<AstNode> GetAll()
+    {
       AstNodeList result = new AstNodeList();
       AddAll(result);
-      return result; 
+      return result;
     }
-    private void AddAll(AstNodeList list) {
+    private void AddAll(AstNodeList list)
+    {
       list.Add(this);
       foreach (AstNode child in this.ChildNodes)
-        if (child != null) 
+        if (child != null)
           child.AddAll(list);
     }
     #endregion
 
     #region overrides: ToString
-    public override string ToString() {
+    public override string ToString()
+    {
       return string.IsNullOrEmpty(Role) ? AsString : Role + ": " + AsString;
     }
     #endregion
 
     #region Utility methods: AddChild, HandleError
 
-    protected AstNode AddChild(string role, ParseTreeNode childParseNode) {
+    protected AstNode AddChild(string role, ParseTreeNode childParseNode)
+    {
       return AddChild(NodeUseType.Unknown, role, childParseNode);
     }
 
-    protected AstNode AddChild(NodeUseType useType, string role, ParseTreeNode childParseNode) {
+    protected AstNode AddChild(NodeUseType useType, string role, ParseTreeNode childParseNode)
+    {
       var child = (AstNode)childParseNode.AstNode;
       if (child == null)
         child = new NullNode(childParseNode.Term); //put a stub to throw an exception with clear message on attempt to evaluate. 

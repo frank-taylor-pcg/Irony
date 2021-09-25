@@ -10,16 +10,15 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections;
-using System.Linq;
-using System.Text;
 using Irony.Parsing;
+using System.Collections;
 
-namespace Irony.Ast {
+namespace Irony.Ast
+{
   // Grammar Explorer uses this interface to discover and display the AST tree after parsing the input
   // (Grammar Explorer additionally uses ToString method of the node to get the text representation of the node)
-  public interface IBrowsableAstNode {
+  public interface IBrowsableAstNode
+  {
     int Position { get; }
     IEnumerable GetChildNodes();
   }
@@ -35,10 +34,8 @@ namespace Irony.Ast {
   // Implementing this interface is a minimum required from custom AST node class to enable its creation by Irony AST builder
   // Alternatively, if your custom AST node class does not implement this interface then you can create
   // and initialize node instances using AstNodeCreator delegate attached to corresponding non-terminal in your grammar.
-  public interface IAstNodeInit {
+  public interface IAstNodeInit
+  {
     void Init(AstContext context, ParseTreeNode parseNode);
   }
-
-
-
 }

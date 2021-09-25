@@ -10,18 +10,14 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions; 
-using System.Text;
-using System.Reflection;
-
 using Irony.Ast;
 using Irony.Parsing;
+using System.Linq.Expressions;
 
-namespace Irony.Interpreter.Ast {
-  public class BinaryOperationNode : AstNode {
+namespace Irony.Interpreter.Ast
+{
+  public class BinaryOperationNode : AstNode
+  {
     public AstNode Left, Right;
     public string OpSymbol;
     public ExpressionType Op;
@@ -31,7 +27,8 @@ namespace Irony.Interpreter.Ast {
 
     public BinaryOperationNode() { }
 
-    public override void Init(AstContext context, ParseTreeNode treeNode) {
+    public override void Init(AstContext context, ParseTreeNode treeNode)
+    {
       base.Init(context, treeNode);
       var nodes = treeNode.GetMappedChildNodes();
       Left = AddChild("Arg", nodes[0]);
@@ -43,27 +40,30 @@ namespace Irony.Interpreter.Ast {
       // Set error anchor to operator, so on error (Division by zero) the explorer will point to 
       // operator node as location, not to the very beginning of the first operand.
       ErrorAnchor = opToken.Location;
-      AsString = Op + "(operator)"; 
+      AsString = Op + "(operator)";
     }
 
-    protected override object DoEvaluate(ScriptThread thread) {
+    protected override object DoEvaluate(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       //assign implementation method
-      switch (Op) {
+      switch (Op)
+      {
         case ExpressionType.AndAlso:
           this.Evaluate = EvaluateAndAlso;
-          break; 
+          break;
         case ExpressionType.OrElse:
           this.Evaluate = EvaluateOrElse;
           break;
         default:
           this.Evaluate = DefaultEvaluateImplementation;
-          break; 
+          break;
       }
       // actually evaluate and get the result.
-      var result = Evaluate(thread); 
+      var result = Evaluate(thread);
       // Check if result is constant - if yes, save the value and switch to method that directly returns the result.
-      if (IsConstant()) {
+      if (IsConstant())
+      {
         _constValue = result;
         AsString = Op + "(operator) Const=" + _constValue;
         this.Evaluate = EvaluateConst;
@@ -72,28 +72,35 @@ namespace Irony.Interpreter.Ast {
       return result;
     }
 
-    private object EvaluateAndAlso(ScriptThread thread) {
-      var leftValue = Left.Evaluate(thread); 
+    private object EvaluateAndAlso(ScriptThread thread)
+    {
+      var leftValue = Left.Evaluate(thread);
       if (!thread.Runtime.IsTrue(leftValue)) return leftValue; //if false return immediately
-      return Right.Evaluate(thread); 
+      return Right.Evaluate(thread);
     }
-    private object EvaluateOrElse(ScriptThread thread) {
+    private object EvaluateOrElse(ScriptThread thread)
+    {
       var leftValue = Left.Evaluate(thread);
       if (thread.Runtime.IsTrue(leftValue)) return leftValue;
       return Right.Evaluate(thread);
     }
 
-    protected object EvaluateFast(ScriptThread thread) {
+    protected object EvaluateFast(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       var arg1 = Left.Evaluate(thread);
       var arg2 = Right.Evaluate(thread);
       //If we have _lastUsed, go straight for it; if types mismatch it will throw
-      if (_lastUsed != null) {
-        try {
+      if (_lastUsed != null)
+      {
+        try
+        {
           var res = _lastUsed.EvaluateBinary(arg1, arg2);
           thread.CurrentNode = Parent; //standard epilog
           return res;
-        } catch {
+        }
+        catch
+        {
           _lastUsed = null;
           _failureCount++;
           // if failed 3 times, change to method without direct try
@@ -107,7 +114,8 @@ namespace Irony.Interpreter.Ast {
       return result;
     }//method
 
-    protected object DefaultEvaluateImplementation(ScriptThread thread) {
+    protected object DefaultEvaluateImplementation(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       var arg1 = Left.Evaluate(thread);
       var arg2 = Right.Evaluate(thread);
@@ -116,14 +124,17 @@ namespace Irony.Interpreter.Ast {
       return result;
     }//method
 
-    private object EvaluateConst(ScriptThread thread) {
-      return _constValue; 
+    private object EvaluateConst(ScriptThread thread)
+    {
+      return _constValue;
     }
 
-    public override bool IsConstant() {
-      if (_isConstant) return true; 
+    public override bool IsConstant()
+    {
+      if (_isConstant) return true;
       _isConstant = Left.IsConstant() && Right.IsConstant();
       return _isConstant;
-    } bool _isConstant; 
+    }
+    bool _isConstant;
   }//class
 }//namespace

@@ -10,19 +10,17 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Diagnostics;
 using Irony.Parsing;
+using System;
+using System.Threading;
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
 
   //WARNING: Ctrl-C for aborting running script does NOT work when you run console app from Visual Studio 2010.
   // Run executable directly from bin folder.
-  public class CommandLine {
+  public class CommandLine
+  {
     #region Fields and properties
     public readonly LanguageRuntime Runtime;
     public readonly IConsoleAdapter _console;
@@ -38,7 +36,8 @@ namespace Irony.Interpreter {
 
     #endregion
 
-    public CommandLine(LanguageRuntime runtime, IConsoleAdapter console = null) {
+    public CommandLine(LanguageRuntime runtime, IConsoleAdapter console = null)
+    {
       Runtime = runtime;
       _console = console ?? new SystemConsoleAdapter();
       var grammar = runtime.Language.Grammar;
@@ -52,10 +51,14 @@ namespace Irony.Interpreter {
       App.RethrowExceptions = false;
     }
 
-    public void Run() {
-      try {
+    public void Run()
+    {
+      try
+      {
         RunImpl();
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         _console.SetTextStyle(ConsoleTextStyle.Error);
         _console.WriteLine(Resources.ErrConsoleFatalError);
         _console.WriteLine(ex.ToString());
@@ -65,13 +68,14 @@ namespace Irony.Interpreter {
       }
     }
 
-
-    private void RunImpl() {
+    private void RunImpl()
+    {
 
       _console.SetTitle(Title);
       _console.WriteLine(Greeting);
       string input;
-      while (true) {
+      while (true)
+      {
         _console.Canceled = false;
         _console.SetTextStyle(ConsoleTextStyle.Normal);
         string prompt = (App.Status == AppStatus.WaitingMoreInput ? PromptMoreInput : Prompt);
@@ -91,14 +95,16 @@ namespace Irony.Interpreter {
         //Evaluate(input);
         WaitForScriptComplete();
 
-        switch (App.Status) {
+        switch (App.Status)
+        {
           case AppStatus.Ready: //success
             _console.WriteLine(App.GetOutput());
             break;
-          case  AppStatus.SyntaxError:
+          case AppStatus.SyntaxError:
             _console.WriteLine(App.GetOutput()); //write all output we have
             _console.SetTextStyle(ConsoleTextStyle.Error);
-            foreach (var err in App.GetParserMessages()) {
+            foreach (var err in App.GetParserMessages())
+            {
               _console.WriteLine(string.Empty.PadRight(prompt.Length + err.Location.Column) + "^"); //show err location
               _console.WriteLine(err.Message); //print message
             }
@@ -113,12 +119,15 @@ namespace Irony.Interpreter {
 
     }//Run method
 
-    private void WaitForScriptComplete() {
+    private void WaitForScriptComplete()
+    {
       _console.Canceled = false;
-      while(true) {
+      while (true)
+      {
         Thread.Sleep(50);
-        if(!IsEvaluating) return;
-        if(_console.Canceled) {
+        if (!IsEvaluating) return;
+        if (_console.Canceled)
+        {
           _console.Canceled = false;
           if (Confirm(Resources.MsgAbortScriptYN))
             WorkerThreadAbort();
@@ -126,60 +135,74 @@ namespace Irony.Interpreter {
       }
     }
 
-    private void Evaluate(string script) {
-      try {
+    private void Evaluate(string script)
+    {
+      try
+      {
         IsEvaluating = true;
         App.Evaluate(script);
-      } finally {
+      }
+      finally
+      {
         IsEvaluating = false;
       }
     }
 
-    private void EvaluateAsync(string script) {
+    private void EvaluateAsync(string script)
+    {
       IsEvaluating = true;
       _workerThread = new Thread(WorkerThreadStart);
       _workerThread.Start(script);
     }
 
-    private void WorkerThreadStart(object data) {
-      try {
+    private void WorkerThreadStart(object data)
+    {
+      try
+      {
         var script = data as string;
         App.Evaluate(script);
-      } finally {
+      }
+      finally
+      {
         IsEvaluating = false;
       }
     }
-    private void WorkerThreadAbort() {
-      try {
+    private void WorkerThreadAbort()
+    {
+      try
+      {
         _workerThread.Abort();
         _workerThread.Join(50);
-      } finally {
+      }
+      finally
+      {
         IsEvaluating = false;
       }
     }
 
-    private bool Confirm(string message) {
+    private bool Confirm(string message)
+    {
       _console.WriteLine(string.Empty);
       _console.Write(message);
       var input = _console.ReadLine();
       return Resources.ConsoleYesChars.Contains(input);
     }
 
-    private void ReportException()  {
+    private void ReportException()
+    {
       _console.SetTextStyle(ConsoleTextStyle.Error);
       var ex = App.LastException;
       var scriptEx = ex as ScriptException;
       if (scriptEx != null)
         _console.WriteLine(scriptEx.Message + " " + Resources.LabelLocation + " " + scriptEx.Location.ToUiString());
-      else {
+      else
+      {
         if (App.Status == AppStatus.Crash)
           _console.WriteLine(ex.ToString());   //Unexpected interpreter crash:  the full stack when debugging your language
         else
-        _console.WriteLine(ex.Message);
+          _console.WriteLine(ex.Message);
 
       }
-      //
     }
-
   }//class
 }

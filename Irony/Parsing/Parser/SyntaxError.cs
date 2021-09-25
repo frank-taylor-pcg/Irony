@@ -10,15 +10,16 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Irony.Parsing { 
+namespace Irony.Parsing
+{
 
   //Container for syntax error
-  public class SyntaxError {
-    public SyntaxError(SourceLocation location, string message, ParserState parserState) {
+  public class SyntaxError
+  {
+    public SyntaxError(SourceLocation location, string message, ParserState parserState)
+    {
       Location = location;
       Message = message;
       ParserState = parserState;
@@ -26,15 +27,18 @@ namespace Irony.Parsing {
 
     public readonly SourceLocation Location;
     public readonly string Message;
-    public ParserState ParserState; 
+    public ParserState ParserState;
 
-    public override string ToString() {
+    public override string ToString()
+    {
       return Message;
     }
   }//class
 
-  public class SyntaxErrorList : List<SyntaxError> {
-    public static int ByLocation(SyntaxError x, SyntaxError y) {
+  public class SyntaxErrorList : List<SyntaxError>
+  {
+    public static int ByLocation(SyntaxError x, SyntaxError y)
+    {
       return SourceLocation.Compare(x.Location, y.Location);
     }
   }

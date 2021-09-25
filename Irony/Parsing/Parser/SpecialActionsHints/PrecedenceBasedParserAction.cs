@@ -10,29 +10,29 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+namespace Irony.Parsing
+{
 
-namespace Irony.Parsing {
-
-  public class PrecedenceBasedParserAction : ConditionalParserAction {
+  public class PrecedenceBasedParserAction : ConditionalParserAction
+  {
     ShiftParserAction _shiftAction;
-    ReduceParserAction _reduceAction; 
+    ReduceParserAction _reduceAction;
 
-    public PrecedenceBasedParserAction(BnfTerm shiftTerm, ParserState newShiftState, Production reduceProduction)  {
+    public PrecedenceBasedParserAction(BnfTerm shiftTerm, ParserState newShiftState, Production reduceProduction)
+    {
       _reduceAction = new ReduceParserAction(reduceProduction);
       var reduceEntry = new ConditionalEntry(CheckMustReduce, _reduceAction, "(Precedence comparison)");
       base.ConditionalEntries.Add(reduceEntry);
       base.DefaultAction = _shiftAction = new ShiftParserAction(shiftTerm, newShiftState);
     }
 
-    private bool CheckMustReduce(ParsingContext context) {
+    private bool CheckMustReduce(ParsingContext context)
+    {
       var input = context.CurrentParserInput;
       var stackCount = context.ParserStack.Count;
       var prodLength = _reduceAction.Production.RValues.Count;
-      for (int i = 1; i <= prodLength; i++) {
+      for (int i = 1; i <= prodLength; i++)
+      {
         var prevNode = context.ParserStack[stackCount - i];
         if (prevNode == null) continue;
         if (prevNode.Precedence == BnfTerm.NoPrecedence) continue;
@@ -46,11 +46,10 @@ namespace Irony.Parsing {
       return false;
     }
 
-    public override string ToString() {
+    public override string ToString()
+    {
       return string.Format(Resources.LabelActionOp, _shiftAction.NewState.Name, _reduceAction.Production.ToStringQuoted());
     }
 
   }//class
-
-
 }//namespace

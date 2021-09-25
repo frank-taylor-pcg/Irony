@@ -6,21 +6,20 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 using System.Globalization;
 
-namespace Irony.Samples.EMFOCL2 {
+namespace Irony.Samples.EMFOCL2
+{
   /// <summary>
   /// Description of EMOFOCL2Grammer.
   /// </summary>
   [Language("SLAng", "2", "SLAng grammar")]
-  public class SLAngGrammer : Irony.Parsing.Grammar {
+  public class SLAngGrammer : Irony.Parsing.Grammar
+  {
     public SLAngGrammer()
-      : base() {
+      : base()
+    {
       StringLiteral stringLiteral = TerminalFactory.CreateCSharpString("StringLiteral");
       StringLiteral charLiteral = TerminalFactory.CreateCSharpChar("CharLiteral");
       NumberLiteral number = TerminalFactory.CreateCSharpNumber("Number");
@@ -525,10 +524,13 @@ namespace Irony.Samples.EMFOCL2 {
       this.Root = specification;
     }
 
-    public override void SkipWhitespace(ISourceStream source) {
-      while (!source.EOF()) {
+    public override void SkipWhitespace(ISourceStream source)
+    {
+      while (!source.EOF())
+      {
         var ch = source.PreviewChar;
-        switch (ch) {
+        switch (ch)
+        {
           case ' ':
           case '\t':
           case '\r':
@@ -549,6 +551,5 @@ namespace Irony.Samples.EMFOCL2 {
         }//switch
       }//while
     }
-
   }
 }

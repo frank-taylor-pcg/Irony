@@ -11,67 +11,73 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
   //Parser class represents combination of scanner and LALR parser (CoreParser)
-  public class Parser {
+  public class Parser
+  {
     public readonly LanguageData Language;
     public readonly ParserData Data;
-    private Grammar _grammar; 
+    private Grammar _grammar;
     //public readonly CoreParser CoreParser;
     public readonly Scanner Scanner;
     public ParsingContext Context { get; internal set; }
     public readonly NonTerminal Root;
     // Either language root or initial state for parsing snippets - like Ruby's expressions in strings : "result= #{x+y}"  
-    internal readonly ParserState InitialState; 
+    internal readonly ParserState InitialState;
 
-    public Parser(Grammar grammar) : this (new LanguageData(grammar)) { }
-    public Parser(LanguageData language) : this(language, null)  {}
-    public Parser(LanguageData language, NonTerminal root) {
+    public Parser(Grammar grammar) : this(new LanguageData(grammar)) { }
+    public Parser(LanguageData language) : this(language, null) { }
+    public Parser(LanguageData language, NonTerminal root)
+    {
       Language = language;
       Data = Language.ParserData;
-      _grammar = Language.Grammar; 
-      Context = new ParsingContext(this); 
+      _grammar = Language.Grammar;
+      Context = new ParsingContext(this);
       Scanner = new Scanner(this);
-      Root = root; 
-      if(Root == null) {
+      Root = root;
+      if (Root == null)
+      {
         Root = Language.Grammar.Root;
         InitialState = Language.ParserData.InitialState;
-      } else {
-        if(Root != Language.Grammar.Root && !Language.Grammar.SnippetRoots.Contains(Root))
+      }
+      else
+      {
+        if (Root != Language.Grammar.Root && !Language.Grammar.SnippetRoots.Contains(Root))
           throw new Exception(string.Format(Resources.ErrRootNotRegistered, root.Name));
-        InitialState = Language.ParserData.InitialStates[Root]; 
+        InitialState = Language.ParserData.InitialStates[Root];
       }
     }
 
-    internal void Reset() {
-      Context.Reset(); 
-      Scanner.Reset(); 
+    internal void Reset()
+    {
+      Context.Reset();
+      Scanner.Reset();
     }
 
 
-    public ParseTree Parse(string sourceText) {
+    public ParseTree Parse(string sourceText)
+    {
       return Parse(sourceText, "Source");
     }
 
-    public ParseTree Parse(string sourceText, string fileName) {
+    public ParseTree Parse(string sourceText, string fileName)
+    {
       SourceLocation loc = default(SourceLocation);
       Reset();
-/*      if (Context.Status == ParserStatus.AcceptedPartial) {
-        var oldLoc = Context.Source.Location;
-        loc = new SourceLocation(oldLoc.Position, oldLoc.Line + 1, 0);
-      } else {
-      }*/
-      Context.Source = new SourceStream(sourceText, this.Language.Grammar.CaseSensitive, Context.TabWidth, loc); 
+      /*      if (Context.Status == ParserStatus.AcceptedPartial) {
+              var oldLoc = Context.Source.Location;
+              loc = new SourceLocation(oldLoc.Position, oldLoc.Line + 1, 0);
+            } else {
+            }*/
+      Context.Source = new SourceStream(sourceText, this.Language.Grammar.CaseSensitive, Context.TabWidth, loc);
       Context.CurrentParseTree = new ParseTree(sourceText, fileName);
       Context.Status = ParserStatus.Parsing;
       var sw = new Stopwatch();
-      sw.Start(); 
+      sw.Start();
       ParseAll();
       //Set Parse status
       var parseTree = Context.CurrentParseTree;
@@ -94,18 +100,22 @@ namespace Irony.Parsing {
       return parseTree;
     }
 
-    private void ParseAll() {
+    private void ParseAll()
+    {
       //main loop
       Context.Status = ParserStatus.Parsing;
-      while (Context.Status == ParserStatus.Parsing) {
+      while (Context.Status == ParserStatus.Parsing)
+      {
         ExecuteNextAction();
       }
     }//ParseAll method
 
-    public ParseTree ScanOnly(string sourceText, string fileName) {
+    public ParseTree ScanOnly(string sourceText, string fileName)
+    {
       Context.CurrentParseTree = new ParseTree(sourceText, fileName);
       Context.Source = new SourceStream(sourceText, Language.Grammar.CaseSensitive, Context.TabWidth);
-      while (true) {
+      while (true)
+      {
         var token = Scanner.GetToken();
         if (token == null || token.Terminal == Language.Grammar.Eof) break;
       }
@@ -113,19 +123,22 @@ namespace Irony.Parsing {
     }
 
     #region Parser Action execution
-    private void ExecuteNextAction() {
+    private void ExecuteNextAction()
+    {
       //Read input only if DefaultReduceAction is null - in this case the state does not contain ExpectedSet,
       // so parser cannot assist scanner when it needs to select terminal and therefore can fail
       if (Context.CurrentParserInput == null && Context.CurrentParserState.DefaultAction == null)
         ReadInput();
       //Check scanner error
-      if (Context.CurrentParserInput != null && Context.CurrentParserInput.IsError) {
+      if (Context.CurrentParserInput != null && Context.CurrentParserInput.IsError)
+      {
         RecoverFromError();
         return;
       }
       //Try getting action
       var action = GetNextAction();
-      if (action == null) {
+      if (action == null)
+      {
         if (CheckPartialInputCompleted()) return;
         RecoverFromError();
         return;
@@ -136,7 +149,8 @@ namespace Irony.Parsing {
       action.Execute(Context);
     }
 
-    internal ParserAction GetNextAction() {
+    internal ParserAction GetNextAction()
+    {
       var currState = Context.CurrentParserState;
       var currInput = Context.CurrentParserInput;
 
@@ -146,9 +160,11 @@ namespace Irony.Parsing {
       //First try as keyterm/key symbol; for example if token text = "while", then first try it as a keyword "while";
       // if this does not work, try as an identifier that happens to match a keyword but is in fact identifier
       Token inputToken = currInput.Token;
-      if (inputToken != null && inputToken.KeyTerm != null) {
+      if (inputToken != null && inputToken.KeyTerm != null)
+      {
         var keyTerm = inputToken.KeyTerm;
-        if (currState.Actions.TryGetValue(keyTerm, out action)) {
+        if (currState.Actions.TryGetValue(keyTerm, out action))
+        {
           #region comments
           // Ok, we found match as a key term (keyword or special symbol)
           // Backpatch the token's term. For example in most cases keywords would be recognized as Identifiers by Scanner.
@@ -173,7 +189,8 @@ namespace Irony.Parsing {
         return action;
       //If input is EOF and NewLineBeforeEof flag is set, try using NewLine to find action
       if (currInput.Term == _grammar.Eof && _grammar.LanguageFlags.IsSet(LanguageFlags.NewLineBeforeEOF) &&
-          currState.Actions.TryGetValue(_grammar.NewLine, out action)) {
+          currState.Actions.TryGetValue(_grammar.NewLine, out action))
+      {
         //There's no action for EOF but there's action for NewLine. Let's add newLine token as input, just in case
         // action code wants to check input - it should see NewLine.
         var newLineToken = new Token(_grammar.NewLine, currInput.Token.Location, "\r\n", null);
@@ -187,11 +204,13 @@ namespace Irony.Parsing {
     #endregion
 
     #region reading input
-    public void ReadInput() {
+    public void ReadInput()
+    {
       Token token;
       Terminal term;
       //Get token from scanner while skipping all comment tokens (but accumulating them in comment block)
-      do {
+      do
+      {
         token = Scanner.GetToken();
         term = token.Terminal;
         if (term.Category == TokenCategory.Comment)
@@ -204,7 +223,8 @@ namespace Irony.Parsing {
       //Create parser input node
       Context.CurrentParserInput = new ParseTreeNode(token);
       //attach comments if any accumulated to content token
-      if (token.Terminal.Category == TokenCategory.Content) {
+      if (token.Terminal.Category == TokenCategory.Content)
+      {
         Context.CurrentParserInput.Comments = Context.CurrentCommentTokens;
         Context.CurrentCommentTokens = new TokenList();
       }
@@ -214,13 +234,15 @@ namespace Irony.Parsing {
     #endregion
 
     #region Error Recovery
-    public void RecoverFromError() {
+    public void RecoverFromError()
+    {
       this.Data.ErrorAction.Execute(Context);
     }
     #endregion
 
     #region Utilities
-    private bool CheckPartialInputCompleted() {
+    private bool CheckPartialInputCompleted()
+    {
       bool partialCompleted = (Context.Mode == ParseMode.CommandLine && Context.CurrentParserInput.Term == _grammar.Eof);
       if (!partialCompleted) return false;
       Context.Status = ParserStatus.AcceptedPartial;
@@ -230,8 +252,10 @@ namespace Irony.Parsing {
     }
 
     // We assume here that the token is a brace (opening or closing)
-    private bool CheckBraceToken(Token token) {
-      if (token.Terminal.Flags.IsSet(TermFlags.IsOpenBrace)) {
+    private bool CheckBraceToken(Token token)
+    {
+      if (token.Terminal.Flags.IsSet(TermFlags.IsOpenBrace))
+      {
         Context.OpenBraces.Push(token);
         return true;
       }
@@ -247,8 +271,5 @@ namespace Irony.Parsing {
     }
     #endregion
 
-
-
-  
   }//class
 }//namespace

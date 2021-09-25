@@ -10,16 +10,14 @@
  * **********************************************************************************/
 #endregion
 
+using Irony.Interpreter.Ast;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Irony.Interpreter.Ast; 
 
-namespace Irony.Interpreter {
-
+namespace Irony.Interpreter
+{
   [Flags]
-  public enum BindingRequestFlags {
+  public enum BindingRequestFlags
+  {
     Read = 0x01,
     Write = 0x02,
     Invoke = 0x04,
@@ -29,7 +27,8 @@ namespace Irony.Interpreter {
 
   //Binding request is a container for information about requested binding. Binding request goes from an Ast node to language runtime. 
   // For example, identifier node would request a binding for an identifier. 
-  public class BindingRequest {
+  public class BindingRequest
+  {
     public ScriptThread Thread;
     public AstNode FromNode;
     public ModuleInfo FromModule;
@@ -37,7 +36,8 @@ namespace Irony.Interpreter {
     public string Symbol;
     public ScopeInfo FromScopeInfo;
     public bool IgnoreCase;
-    public BindingRequest(ScriptThread thread, AstNode fromNode, string symbol, BindingRequestFlags flags) {
+    public BindingRequest(ScriptThread thread, AstNode fromNode, string symbol, BindingRequestFlags flags)
+    {
       Thread = thread;
       FromNode = fromNode;
       FromModule = thread.App.DataMap.GetModule(fromNode.ModuleNode);
@@ -47,5 +47,4 @@ namespace Irony.Interpreter {
       IgnoreCase = !thread.Runtime.Language.Grammar.CaseSensitive;
     }
   }
-
 }

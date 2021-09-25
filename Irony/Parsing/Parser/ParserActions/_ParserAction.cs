@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace Irony.Parsing {
-
-  public abstract partial class ParserAction {
+namespace Irony.Parsing
+{
+  public abstract partial class ParserAction
+  {
 
     public ParserAction() { }
 
-    public virtual void Execute(ParsingContext context) {
-    
-    }
+    public virtual void Execute(ParsingContext context) { }
 
-    public override string ToString() {
+    public override string ToString()
+    {
       return Resources.LabelActionUnknown; //should never happen
     }
 
   }//class ParserAction
 
   public class ParserActionTable : Dictionary<BnfTerm, ParserAction> { }
-
 
 }

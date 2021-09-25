@@ -10,25 +10,22 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.Reflection;
 using Irony.Parsing;
-using System.IO;
+using System;
+using System.Reflection;
+using System.Windows.Forms;
 
-namespace Irony.GrammarExplorer {
-  public partial class fmSelectGrammars : Form {
-    public fmSelectGrammars() {
+namespace Irony.GrammarExplorer
+{
+  public partial class fmSelectGrammars : Form
+  {
+    public fmSelectGrammars()
+    {
       InitializeComponent();
     }
 
-    public static GrammarItemList SelectGrammars(string assemblyPath, GrammarItemList loadedGrammars) {
+    public static GrammarItemList SelectGrammars(string assemblyPath, GrammarItemList loadedGrammars)
+    {
       var fromGrammars = LoadGrammars(assemblyPath);
       if (fromGrammars == null)
         return null;
@@ -36,7 +33,8 @@ namespace Irony.GrammarExplorer {
       fmSelectGrammars form = new fmSelectGrammars();
       var listbox = form.lstGrammars;
       listbox.Sorted = false;
-      foreach(GrammarItem item in fromGrammars) {
+      foreach (GrammarItem item in fromGrammars)
+      {
         listbox.Items.Add(item);
         if (!ContainsGrammar(loadedGrammars, item))
           listbox.SetItemChecked(listbox.Items.Count - 1, true);
@@ -45,8 +43,10 @@ namespace Irony.GrammarExplorer {
 
       if (form.ShowDialog() != DialogResult.OK) return null;
       GrammarItemList result = new GrammarItemList();
-      for (int i = 0; i < listbox.Items.Count; i++) {
-        if (listbox.GetItemChecked(i)) {
+      for (int i = 0; i < listbox.Items.Count; i++)
+      {
+        if (listbox.GetItemChecked(i))
+        {
           var item = listbox.Items[i] as GrammarItem;
           item._loading = false;
           result.Add(item);
@@ -55,36 +55,44 @@ namespace Irony.GrammarExplorer {
       return result;
     }
 
-    private static GrammarItemList LoadGrammars(string assemblyPath) {
+    private static GrammarItemList LoadGrammars(string assemblyPath)
+    {
       Assembly asm = null;
-      try {
+      try
+      {
         asm = GrammarLoader.LoadAssembly(assemblyPath);
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         MessageBox.Show("Failed to load assembly: " + ex.Message);
         return null;
       }
       var types = asm.GetTypes();
       var grammars = new GrammarItemList();
-      foreach (Type t in types) {
+      foreach (Type t in types)
+      {
         if (t.IsAbstract) continue;
         if (!t.IsSubclassOf(typeof(Grammar))) continue;
         grammars.Add(new GrammarItem(t, assemblyPath));
       }
-      if (grammars.Count == 0) {
+      if (grammars.Count == 0)
+      {
         MessageBox.Show("No classes derived from Irony.Grammar were found in the assembly.");
         return null;
       }
       return grammars;
     }
 
-    private static bool ContainsGrammar(GrammarItemList items, GrammarItem item) {
+    private static bool ContainsGrammar(GrammarItemList items, GrammarItem item)
+    {
       foreach (var listItem in items)
         if (listItem.TypeName == item.TypeName && listItem.Location == item.Location)
           return true;
       return false;
     }
 
-    private void btnCheckUncheck_Click(object sender, EventArgs e) {
+    private void btnCheckUncheck_Click(object sender, EventArgs e)
+    {
       bool check = sender == btnCheckAll;
       for (int i = 0; i < lstGrammars.Items.Count; i++)
         lstGrammars.SetItemChecked(i, check);

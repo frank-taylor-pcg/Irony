@@ -10,18 +10,18 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Irony.Parsing;
 using Irony.Interpreter.Ast;
+using Irony.Parsing;
 
-namespace Irony.Samples.Scheme {
+namespace Irony.Samples.Scheme
+{
   [Language("Scheme", "1.0", "Sample Scheme grammar")]
-  public class SchemeGrammar : Grammar {
+  public class SchemeGrammar : Grammar
+  {
     // It is loosely based on R6RS specs.  
     // See Grammar Errors tab in GrammarExplorer for remaining conflicts.
-    public SchemeGrammar() {
+    public SchemeGrammar()
+    {
 
       #region Terminals
       ConstantTerminal Constant = new ConstantTerminal("Constant", typeof(LiteralValueNode));
@@ -44,13 +44,13 @@ namespace Irony.Samples.Scheme {
 
       // TODO: build SchemeCharLiteral
       // the following is nonsense, just to put something there
-      var charLiteral = new StringLiteral("Char", "'", StringOptions.None); 
+      var charLiteral = new StringLiteral("Char", "'", StringOptions.None);
       var stringLiteral = new StringLiteral("String", "\"", StringOptions.AllowsAllEscapes);
       //Identifiers. Note: added "-", just to allow IDs starting with "->" 
       var SimpleIdentifier = new IdentifierTerminal("SimpleIdentifier", "_+-*/.@?!<>=", "_+-*/.@?!<>=$%&:^~");
       //                                                           name                extraChars      extraFirstChars  
       var Number = TerminalFactory.CreateSchemeNumber("Number");
-      var Byte = new NumberLiteral("Byte", NumberOptions.IntOnly); 
+      var Byte = new NumberLiteral("Byte", NumberOptions.IntOnly);
 
       //Comments
       Terminal Comment = new CommentTerminal("Comment", "#|", "|#");
@@ -114,7 +114,7 @@ namespace Irony.Samples.Scheme {
       #endregion
 
       #region Rules
-      base.Root = Module; 
+      base.Root = Module;
 
       LP.Rule = ToTerm("(") | "[";  //R6RS allows mix & match () and []
       RP.Rule = ToTerm(")") | "]";
@@ -122,7 +122,7 @@ namespace Irony.Samples.Scheme {
       // Module.Rule = LibraryListOpt + Script; -- this brings conflicts
       Module.Rule = LibraryList + Script | Script;
       LibraryList.Rule = MakePlusRule(LibraryList, Library);
-      Script.Rule = ImportSection + DatumList | DatumList; 
+      Script.Rule = ImportSection + DatumList | DatumList;
 
       //Library
       // the following doesn't work - brings conflicts that incorrectly resolved by default shifting
@@ -134,7 +134,7 @@ namespace Irony.Samples.Scheme {
       LibraryBody.Rule = ExportSection + ImportSection + DatumList
                        | ExportSection + DatumList
                        | ImportSection + DatumList
-                       | DatumList; 
+                       | DatumList;
       LibraryName.Rule = LP + IdentifierList + LibraryVersion.Q() + RP;
       LibraryVersion.Rule = LP + VersionListOpt + RP; //zero or more subversion numbers
       VersionListOpt.Rule = MakeStarRule(VersionListOpt, Number);
@@ -142,7 +142,7 @@ namespace Irony.Samples.Scheme {
       ImportSection.Rule = LP + "import" + ImportSpecList + RP;
       ExportSpecList.Rule = MakePlusRule(ExportSpecList, ExportSpec);
       ImportSpecList.Rule = MakePlusRule(ImportSpecList, ImportSpec);
-      ExportSpec.Rule = Identifier | LP + "rename"  +  LP + Identifier + Identifier + RP + RP;
+      ExportSpec.Rule = Identifier | LP + "rename" + LP + Identifier + Identifier + RP + RP;
       ImportSpec.Rule = LP + Identifier + RP;   // - much more complex in R6RS
 
       //Datum
@@ -190,21 +190,15 @@ namespace Irony.Samples.Scheme {
       #endregion 
 
       //Register brace  pairs
-      RegisterBracePair("(", ")"); 
+      RegisterBracePair("(", ")");
       RegisterBracePair("[", "]");
 
       MarkPunctuation(LP, RP);
-      MarkTransient(Datum, CompoundDatum, Statement, SpecialForm, Atom, FunctionRef); 
+      MarkTransient(Datum, CompoundDatum, Statement, SpecialForm, Atom, FunctionRef);
 
       //Scheme is tail-recursive language
       base.LanguageFlags |= LanguageFlags.TailRecursive;// | LanguageFlags.CreateAst; 
 
     }//constructor
-
-
   }//class
-
-  
-
-
 }//namespace

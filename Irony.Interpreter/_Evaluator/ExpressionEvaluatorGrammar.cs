@@ -10,14 +10,12 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Irony.Parsing;
-using Irony.Interpreter;
 using Irony.Interpreter.Ast;
+using Irony.Parsing;
+using System;
 
-namespace Irony.Interpreter.Evaluator {
+namespace Irony.Interpreter.Evaluator
+{
   // A ready-to-use evaluator implementation.
 
   // This grammar describes programs that consist of simple expressions and assignments
@@ -31,18 +29,20 @@ namespace Irony.Interpreter.Evaluator {
   //  supports ternary ?: operator
 
   [Language("ExpressionEvaluator", "1.0", "Multi-line expression evaluator")]
-  public class ExpressionEvaluatorGrammar : InterpretedLanguageGrammar {
-    public ExpressionEvaluatorGrammar() : base(caseSensitive: false) { 
-      this.GrammarComments = 
+  public class ExpressionEvaluatorGrammar : InterpretedLanguageGrammar
+  {
+    public ExpressionEvaluatorGrammar() : base(caseSensitive: false)
+    {
+      this.GrammarComments =
 @"Irony expression evaluator. Case-insensitive. Supports big integers, float data types, variables, assignments,
 arithmetic operations, augmented assignments (+=, -=), inc/dec (++,--), strings with embedded expressions; 
-bool operations &,&&, |, ||; ternary '?:' operator." ;
+bool operations &,&&, |, ||; ternary '?:' operator.";
       // 1. Terminals
       var number = new NumberLiteral("number");
       //Let's allow big integers (with unlimited number of digits):
       number.DefaultIntTypes = new TypeCode[] { TypeCode.Int32, TypeCode.Int64, NumberLiteral.TypeCodeBigInt };
       var identifier = new IdentifierTerminal("identifier");
-      var comment = new CommentTerminal("comment", "#", "\n", "\r"); 
+      var comment = new CommentTerminal("comment", "#", "\n", "\r");
       //comment must be added to NonGrammarTerminals list; it is not used directly in grammar rules,
       // so we add it to this list to let Scanner know that it is also a valid terminal. 
       base.NonGrammarTerminals.Add(comment);
@@ -50,7 +50,7 @@ bool operations &,&&, |, ||; ternary '?:' operator." ;
 
       //String literal with embedded expressions  ------------------------------------------------------------------
       var stringLit = new StringLiteral("string", "\"", StringOptions.AllowsAllEscapes | StringOptions.IsTemplate);
-      stringLit.AddStartEnd("'", StringOptions.AllowsAllEscapes | StringOptions.IsTemplate); 
+      stringLit.AddStartEnd("'", StringOptions.AllowsAllEscapes | StringOptions.IsTemplate);
       stringLit.AstConfig.NodeType = typeof(StringTemplateNode);
       var Expr = new NonTerminal("Expr"); //declare it here to use in template definition 
       var templateSettings = new StringTemplateSettings(); //by default set to Ruby-style settings 
@@ -85,14 +85,14 @@ bool operations &,&&, |, ||; ternary '?:' operator." ;
       Term.Rule = number | ParExpr | stringLit | FunctionCall | identifier | MemberAccess | IndexedAccess;
       ParExpr.Rule = "(" + Expr + ")";
       UnExpr.Rule = UnOp + Term + ReduceHere();
-      UnOp.Rule = ToTerm("+") | "-" | "!"; 
+      UnOp.Rule = ToTerm("+") | "-" | "!";
       BinExpr.Rule = Expr + BinOp + Expr;
       BinOp.Rule = ToTerm("+") | "-" | "*" | "/" | "**" | "==" | "<" | "<=" | ">" | ">=" | "!=" | "&&" | "||" | "&" | "|";
       PrefixIncDec.Rule = IncDecOp + identifier;
       PostfixIncDec.Rule = identifier + PreferShiftHere() + IncDecOp;
       IncDecOp.Rule = ToTerm("++") | "--";
       TernaryIfExpr.Rule = Expr + "?" + Expr + ":" + Expr;
-      MemberAccess.Rule = Expr + PreferShiftHere() + "." + identifier; 
+      MemberAccess.Rule = Expr + PreferShiftHere() + "." + identifier;
       AssignmentStmt.Rule = ObjectRef + AssignmentOp + Expr;
       AssignmentOp.Rule = ToTerm("=") | "+=" | "-=" | "*=" | "/=";
       Statement.Rule = AssignmentStmt | Expr | Empty;
@@ -152,14 +152,17 @@ Press Ctrl-C to exit the program at any time.
       this.LanguageFlags = LanguageFlags.NewLineBeforeEOF | LanguageFlags.CreateAst | LanguageFlags.SupportsBigInt;
     }
 
-    public override LanguageRuntime CreateRuntime(LanguageData language) {
-      return new ExpressionEvaluatorRuntime(language); 
+    public override LanguageRuntime CreateRuntime(LanguageData language)
+    {
+      return new ExpressionEvaluatorRuntime(language);
     }
 
     #region Running in Grammar Explorer
     private static ExpressionEvaluator _evaluator;
-    public override string RunSample(RunSampleArgs args) {
-      if (_evaluator == null) {
+    public override string RunSample(RunSampleArgs args)
+    {
+      if (_evaluator == null)
+      {
         _evaluator = new ExpressionEvaluator(this);
         _evaluator.Globals.Add("null", _evaluator.Runtime.NoneValue);
         _evaluator.Globals.Add("true", true);

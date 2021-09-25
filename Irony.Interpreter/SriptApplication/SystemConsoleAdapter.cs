@@ -10,38 +10,42 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using Irony.Parsing;
+using System;
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
   //WARNING: Ctrl-C for aborting running script does NOT work when you run console app from Visual Studio 2010.
   // Run executable directly from bin folder.
 
   // Default implementation of IConsoleAdapter with System.Console as input/output.
-  public class SystemConsoleAdapter : IConsoleAdapter {
-    public SystemConsoleAdapter() {
+  public class SystemConsoleAdapter : IConsoleAdapter
+  {
+    public SystemConsoleAdapter()
+    {
       Console.CancelKeyPress += Console_CancelKeyPress;
     }
 
-    void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e) {
+    void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+    {
       e.Cancel = true; //do not kill the app yet
       Canceled = true;
     }
 
     public bool Canceled { get; set; }
 
-    public void Write(string text) {
+    public void Write(string text)
+    {
       Console.Write(text);
     }
-    public void WriteLine(string text) {
+    public void WriteLine(string text)
+    {
       Console.WriteLine(text);
     }
-    public void SetTextStyle(ConsoleTextStyle style) {
-      switch(style) {
+    public void SetTextStyle(ConsoleTextStyle style)
+    {
+      switch (style)
+      {
         case ConsoleTextStyle.Normal:
           Console.ForegroundColor = ConsoleColor.White;
           break;
@@ -51,25 +55,30 @@ namespace Irony.Interpreter {
       }
     }
 
-    public int Read() {
+    public int Read()
+    {
       return Console.Read();
     }
 
-    public string ReadLine() {
+    public string ReadLine()
+    {
       var input = Console.ReadLine();
       Canceled = (input == null);  // Windows console method ReadLine returns null if Ctrl-C was pressed.
       return input;
     }
 
-    public void SetTitle(string title) {
+    public void SetTitle(string title)
+    {
       Console.Title = title;
     }
 
-    public void Clear() {
+    public void Clear()
+    {
       Console.Clear();
     }
 
-    public string GetOutput() {
+    public string GetOutput()
+    {
       return string.Empty; // not supported
     }
   }

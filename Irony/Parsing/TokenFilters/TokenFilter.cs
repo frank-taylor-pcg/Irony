@@ -10,11 +10,10 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
   #region Comments
   //  Token filter is a token preprocessor that operates on a token stream between scanner and parser:
@@ -38,15 +37,19 @@ namespace Irony.Parsing {
   //     The CodeOutlineFilter re-creates new-line and indent tokens by analyzing 
   //     the line/column properties of the incoming tokens, and inserts them into its output. 
   #endregion
-  public class TokenFilter {
+  public class TokenFilter
+  {
 
-    public virtual IEnumerable<Token> BeginFiltering(ParsingContext context, IEnumerable<Token> tokens) {
+    public virtual IEnumerable<Token> BeginFiltering(ParsingContext context, IEnumerable<Token> tokens)
+    {
       yield break;
     }
 
-    public virtual void Reset() {
+    public virtual void Reset()
+    {
     }
-    protected internal virtual void OnSetSourceLocation(SourceLocation location) {
+    protected internal virtual void OnSetSourceLocation(SourceLocation location)
+    {
     }
   }//class
 

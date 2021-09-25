@@ -11,25 +11,26 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Numerics; 
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
 
-  public partial class LanguageRuntime {
+  public partial class LanguageRuntime
+  {
     public readonly OperatorImplementationTable OperatorImplementations = new OperatorImplementationTable(2000);
 
-
-    public object ExecuteBinaryOperator(ExpressionType op, object arg1, object arg2, ref OperatorImplementation previousUsed) {
+    public object ExecuteBinaryOperator(ExpressionType op, object arg1, object arg2, ref OperatorImplementation previousUsed)
+    {
       // 1. Get arg types
       Type arg1Type, arg2Type;
-      try {
+      try
+      {
         arg1Type = arg1.GetType();
         arg2Type = arg2.GetType();
-      } catch (NullReferenceException) {
+      }
+      catch (NullReferenceException)
+      {
         // arg1 or arg2 is null - which means never assigned.
         CheckUnassigned(arg1);
         CheckUnassigned(arg2);
@@ -42,25 +43,31 @@ namespace Irony.Interpreter {
       // But we might still try it here, with proper checks
       var currentImpl = previousUsed;
       if (currentImpl != null && (arg1Type != currentImpl.Key.Arg1Type || arg2Type != currentImpl.Key.Arg2Type))
-          currentImpl = null; 
+        currentImpl = null;
 
       // 3. Find implementation for arg types
       OperatorDispatchKey key;
-      if (currentImpl == null) {
+      if (currentImpl == null)
+      {
         key = new OperatorDispatchKey(op, arg1Type, arg2Type);
         if (!OperatorImplementations.TryGetValue(key, out currentImpl))
           ThrowScriptError(Resources.ErrOpNotDefinedForTypes, op, arg1Type, arg2Type);
       }
 
       // 4. Actually call 
-      try {
+      try
+      {
         previousUsed = currentImpl;
         return currentImpl.EvaluateBinary(arg1, arg2);
-      } catch (OverflowException) {
-        if (currentImpl.OverflowHandler == null)    throw;
+      }
+      catch (OverflowException)
+      {
+        if (currentImpl.OverflowHandler == null) throw;
         previousUsed = currentImpl.OverflowHandler; //set previousUsed to overflowHandler, so it will be used next time
         return ExecuteBinaryOperator(op, arg1, arg2, ref previousUsed); //call self recursively
-      } catch(IndexOutOfRangeException) {
+      }
+      catch (IndexOutOfRangeException)
+      {
         //We can get here only if we use SmartBoxing - the result is out of range of pre-allocated boxes, 
         // so attempt to lookup a boxed value in _boxes dictionary fails with outOfRange exc
         if (currentImpl.NoBoxImplementation == null) throw;
@@ -73,12 +80,16 @@ namespace Irony.Interpreter {
 
     }//method
 
-    public object ExecuteUnaryOperator(ExpressionType op, object arg1, ref OperatorImplementation previousUsed) {
+    public object ExecuteUnaryOperator(ExpressionType op, object arg1, ref OperatorImplementation previousUsed)
+    {
       // 1. Get arg type
       Type arg1Type;
-      try {
+      try
+      {
         arg1Type = arg1.GetType();
-      } catch (NullReferenceException) {
+      }
+      catch (NullReferenceException)
+      {
         CheckUnassigned(arg1);
         throw;
       }
@@ -90,27 +101,31 @@ namespace Irony.Interpreter {
         currentImpl = null;
 
       // 3. Find implementation for arg type
-      if (currentImpl == null) {
+      if (currentImpl == null)
+      {
         key = new OperatorDispatchKey(op, arg1Type);
         if (!OperatorImplementations.TryGetValue(key, out currentImpl))
           ThrowError(Resources.ErrOpNotDefinedForType, op, arg1Type);
       }
 
       // 4. Actually call 
-      try {
+      try
+      {
         previousUsed = currentImpl; //set previousUsed so next time we'll try this impl first
         return currentImpl.Arg1Converter(arg1);
-      } catch (OverflowException) {
+      }
+      catch (OverflowException)
+      {
         if (currentImpl.OverflowHandler == null)
           throw;
         previousUsed = currentImpl.OverflowHandler; //set previousUsed to overflowHandler, so it will be used next time
         return ExecuteUnaryOperator(op, arg1, ref previousUsed); //call self recursively
-      } 
+      }
     }//method
 
-
     //TODO: finish this
-    private void CheckUnassigned(object value) {
+    private void CheckUnassigned(object value)
+    {
       if (value == null)
         throw new Exception("Variable unassigned.");
     }

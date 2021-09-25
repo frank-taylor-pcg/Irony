@@ -8,9 +8,9 @@ namespace Irony.Samples.Java
     {
       bool enableAutomaticConflictResolution = true; //Roman: moved it here and made var instead of const to get rid of compiler warnings
 
-#region Identifier and Literals
-      #pragma warning disable 168
-      #pragma warning disable 162
+      #region Identifier and Literals
+#pragma warning disable 168
+#pragma warning disable 162
       // ReSharper disable InconsistentNaming
       // ReSharper disable ConditionIsAlwaysTrueOrFalse
 
@@ -20,25 +20,25 @@ namespace Irony.Samples.Java
         AllChars = ValidIdentifierCharacters
       };
       var identifier = new NonTerminal("identifier")
-                        {
-                          Rule = enableAutomaticConflictResolution
+      {
+        Rule = enableAutomaticConflictResolution
                                   ? PreferShiftHere() + identifier_raw
                                   : identifier_raw
-                        };
+      };
 
       var number_literal = CreateJavaNumber("number");
       var character_literal = CreateJavaChar("char");
       var string_literal = CreateJavaString("string");
       var null_literal = CreateJavaNull("null");
-      
+
       // ReSharper restore ConditionIsAlwaysTrueOrFalse
       // ReSharper restore InconsistentNaming
-      #pragma warning restore 162
-      #pragma warning restore 168
-#endregion
+#pragma warning restore 162
+#pragma warning restore 168
+      #endregion
 
-#region Terminals
-      #pragma warning disable 168
+      #region Terminals
+#pragma warning disable 168
       // ReSharper disable InconsistentNaming
 
       var ABSTRACT = ToTerm("abstract", "abstract");
@@ -137,39 +137,39 @@ namespace Irony.Samples.Java
       var WHILE = ToTerm("while", "while");
 
       #region Terminals with conflicts
-      #pragma warning disable 162
+#pragma warning disable 162
       // ReSharper disable ConditionIsAlwaysTrueOrFalse
 
       var THIS_RAW = ToTerm("this", "this");
       var THIS = new NonTerminal("_this_")
-                  {
-                    Rule = enableAutomaticConflictResolution
+      {
+        Rule = enableAutomaticConflictResolution
                             ? PreferShiftHere() + THIS_RAW
                             : THIS_RAW
-                  };
+      };
 
       var LT_RAW = ToTerm("<", "lt");
       var LT = new NonTerminal("_<_")
-                {
-                  Rule = CustomActionHere(ResolveConflicts) + LT_RAW
-                };
-      
+      {
+        Rule = CustomActionHere(ResolveConflicts) + LT_RAW
+      };
+
       var L_PAR_RAW = ToTerm("(", "l_par");
       var L_PAR = new NonTerminal("_(_")
-                    {
-                      Rule = enableAutomaticConflictResolution
+      {
+        Rule = enableAutomaticConflictResolution
                               ? PreferShiftHere() + L_PAR_RAW
                               : L_PAR_RAW
-                    };
-      
+      };
+
       var L_BKT_RAW = ToTerm("[", "l_bkt");
       var L_BKT = new NonTerminal("_[_")
-                    {
-                      Rule = enableAutomaticConflictResolution
+      {
+        Rule = enableAutomaticConflictResolution
                               ? PreferShiftHere() + L_BKT_RAW
                               : L_BKT_RAW
-                    };
-      
+      };
+
       var DOT_RAW = ToTerm(".", "dot");
       var DOT = new NonTerminal("_._")
       {
@@ -180,16 +180,16 @@ namespace Irony.Samples.Java
       {
         Rule = CustomActionHere(ResolveConflicts) + SUPER_TOKEN_RAW
       };
-      
-      // ReSharper restore ConditionIsAlwaysTrueOrFalse
-      #pragma warning restore 162
-      #endregion
-      
-      // ReSharper restore InconsistentNaming
-      #pragma warning restore 168
-#endregion
 
-#region NonTerminal Declarations
+      // ReSharper restore ConditionIsAlwaysTrueOrFalse
+#pragma warning restore 162
+      #endregion
+
+      // ReSharper restore InconsistentNaming
+#pragma warning restore 168
+      #endregion
+
+      #region NonTerminal Declarations
       // ReSharper disable InconsistentNaming
       var abstract_method_declaration = new NonTerminal("abstract_method_declaration");
       var annotation = new NonTerminal("annotation");
@@ -331,9 +331,9 @@ namespace Irony.Samples.Java
       var variable_initializer = new NonTerminal("variable_initializer");
       var variable_initializers = new NonTerminal("variable_initializers");
       // ReSharper restore InconsistentNaming
-#endregion
+      #endregion
 
-#region NonTerminal Rules
+      #region NonTerminal Rules
 
       #region common
       modifiers_opt.Rule = Empty | modifiers;
@@ -386,18 +386,18 @@ namespace Irony.Samples.Java
       exception_type_list.Rule = MakePlusRule(exception_type_list, COMMA, templated_qualified_name);
 
       formal_parameter_list_opt.Rule = Empty | formal_parameter_list;
-      formal_parameter_list.Rule  = formal_parameters + COMMA + last_formal_parameter;
-      formal_parameter_list.Rule |=                             last_formal_parameter;
+      formal_parameter_list.Rule = formal_parameters + COMMA + last_formal_parameter;
+      formal_parameter_list.Rule |= last_formal_parameter;
       formal_parameters.Rule = MakePlusRule(formal_parameters, COMMA, formal_parameter);
-      formal_parameter.Rule  = modifiers_opt + primitive_type +           dims + identifier + dims;
+      formal_parameter.Rule = modifiers_opt + primitive_type + dims + identifier + dims;
       formal_parameter.Rule |= modifiers_opt + templated_qualified_name + dims + identifier + dims;
-      last_formal_parameter.Rule  = formal_parameter;
-      last_formal_parameter.Rule |= modifiers_opt + primitive_type           + dims + DOT_DOT_DOT + identifier + dims;
+      last_formal_parameter.Rule = formal_parameter;
+      last_formal_parameter.Rule |= modifiers_opt + primitive_type + dims + DOT_DOT_DOT + identifier + dims;
       last_formal_parameter.Rule |= modifiers_opt + templated_qualified_name + dims + DOT_DOT_DOT + identifier + dims;
 
       variable_declarators_rest.Rule = MakeStarRule(variable_declarators_rest, COMMA + variable_declarator);
       variable_declarators.Rule = MakePlusRule(variable_declarators, COMMA, variable_declarator);
-      variable_declarator.Rule  = templated_qualified_name + dims;
+      variable_declarator.Rule = templated_qualified_name + dims;
       variable_declarator.Rule |= templated_qualified_name + dims + ASSIGN + variable_initializer;
 
       //variable_initializers.Rule = MakeStarRule(variable_initializers, COMMA, variable_initializer, TermListOptions.AllowTrailingDelimiter);
@@ -407,8 +407,8 @@ namespace Irony.Samples.Java
 
       array_initializer.Rule = L_BRC + variable_initializers + R_BRC;
       array_initializer.Rule |= L_BRC + COMMA + R_BRC;
-      
-      primitive_type.Rule  = BOOLEAN;
+
+      primitive_type.Rule = BOOLEAN;
       primitive_type.Rule |= BYTE;
       primitive_type.Rule |= SHORT;
       primitive_type.Rule |= INT;
@@ -432,42 +432,42 @@ namespace Irony.Samples.Java
       block_statement.Rule = statement;
       block_statement.Rule |= explicit_constructor_invocation;
       block_statement.Rule |= modifiers + local_variable_declaration;
-      block_statement.Rule |=             local_variable_declaration;
+      block_statement.Rule |= local_variable_declaration;
       block_statement.Rule |= modifiers + annotation_declaration;
-      block_statement.Rule |=             annotation_declaration;
+      block_statement.Rule |= annotation_declaration;
       block_statement.Rule |= modifiers + class_declaration;
-      block_statement.Rule |=             class_declaration;
+      block_statement.Rule |= class_declaration;
       block_statement.Rule |= modifiers + enum_declaration;
-      block_statement.Rule |=             enum_declaration;
+      block_statement.Rule |= enum_declaration;
       block_statement.Rule |= modifiers + interface_declaration;
-      block_statement.Rule |=             interface_declaration;
+      block_statement.Rule |= interface_declaration;
 
       local_variable_declaration.Rule = primitive_type + dim + dims + variable_declarators + SEMI;
-      local_variable_declaration.Rule |= primitive_type +             variable_declarators + SEMI;
+      local_variable_declaration.Rule |= primitive_type + variable_declarators + SEMI;
       local_variable_declaration.Rule |= templated_qualified_name + dim + dims + variable_declarators + SEMI;
-      local_variable_declaration.Rule |= templated_qualified_name +              variable_declarators + SEMI;
+      local_variable_declaration.Rule |= templated_qualified_name + variable_declarators + SEMI;
       #endregion
 
       #region top level
       compilation_unit.Rule = Empty;
       compilation_unit.Rule |= package_declaration_w_modifiers + import_declarations + type_declarations;
-      compilation_unit.Rule |= package_declaration +             import_declarations + type_declarations;
-      compilation_unit.Rule |=                                   import_declarations + type_declarations;
-      compilation_unit.Rule |= package_declaration_w_modifiers +                       type_declarations;
-      compilation_unit.Rule |=             package_declaration +                       type_declarations;
-      compilation_unit.Rule |=                                                         type_declarations;
+      compilation_unit.Rule |= package_declaration + import_declarations + type_declarations;
+      compilation_unit.Rule |= import_declarations + type_declarations;
+      compilation_unit.Rule |= package_declaration_w_modifiers + type_declarations;
+      compilation_unit.Rule |= package_declaration + type_declarations;
+      compilation_unit.Rule |= type_declarations;
       compilation_unit.Rule |= package_declaration_w_modifiers + import_declarations;
-      compilation_unit.Rule |=             package_declaration + import_declarations;
-      compilation_unit.Rule |=                                   import_declarations;
+      compilation_unit.Rule |= package_declaration + import_declarations;
+      compilation_unit.Rule |= import_declarations;
       compilation_unit.Rule |= package_declaration_w_modifiers;
-      compilation_unit.Rule |=             package_declaration;
+      compilation_unit.Rule |= package_declaration;
 
       package_declaration.Rule = PACKAGE + qualified_name + SEMI;
       package_declaration_w_modifiers.Rule = modifiers + PACKAGE + qualified_name + SEMI;
 
       import_declarations.Rule = MakePlusRule(import_declarations, import_declaration);
       import_declaration.Rule = normal_import_declaration | static_import_declaration;
-      normal_import_declaration.Rule = IMPORT +          qualified_name + import_wildcard + SEMI;
+      normal_import_declaration.Rule = IMPORT + qualified_name + import_wildcard + SEMI;
       static_import_declaration.Rule = IMPORT + STATIC + qualified_name + import_wildcard + SEMI;
       import_wildcard.Rule = Empty | (DOT + STAR);
 
@@ -482,8 +482,8 @@ namespace Irony.Samples.Java
       annotation_declaration.Rule = AT + INTERFACE + identifier + L_BRC + annotation_type_body + R_BRC;
       class_declaration.Rule = CLASS_TOKEN + identifier + type_parameters_opt + super_opt + interfaces_opt + L_BRC + class_body + R_BRC;
       enum_declaration.Rule = ENUM + identifier + interfaces_opt + L_BRC + enum_body + R_BRC;
-      interface_declaration.Rule  = INTERFACE + identifier + type_parameters_opt + EXTENDS + interface_type_list + L_BRC + interface_body + R_BRC;
-      interface_declaration.Rule |= INTERFACE + identifier + type_parameters_opt +                                 L_BRC + interface_body + R_BRC;
+      interface_declaration.Rule = INTERFACE + identifier + type_parameters_opt + EXTENDS + interface_type_list + L_BRC + interface_body + R_BRC;
+      interface_declaration.Rule |= INTERFACE + identifier + type_parameters_opt + L_BRC + interface_body + R_BRC;
       #endregion
 
       #region interface_declaration
@@ -495,12 +495,12 @@ namespace Irony.Samples.Java
       interface_member_declaration.Rule |= modifiers_opt + interface_declaration;
 
       // these type_parameters are not actually allowed but it saves a whole lot of work in resolving code.
-      constant_declaration.Rule  = type_parameters_opt + primitive_type +           dims + variable_declarators + SEMI;
+      constant_declaration.Rule = type_parameters_opt + primitive_type + dims + variable_declarators + SEMI;
       constant_declaration.Rule |= type_parameters_opt + templated_qualified_name + dims + variable_declarators + SEMI;
 
-      abstract_method_declaration.Rule  = type_parameters_opt + primitive_type +           dims + method_declarator + throws_opt + SEMI;
+      abstract_method_declaration.Rule = type_parameters_opt + primitive_type + dims + method_declarator + throws_opt + SEMI;
       abstract_method_declaration.Rule |= type_parameters_opt + templated_qualified_name + dims + method_declarator + throws_opt + SEMI;
-      abstract_method_declaration.Rule |= type_parameters_opt + VOID +                     dims + method_declarator + throws_opt + SEMI;
+      abstract_method_declaration.Rule |= type_parameters_opt + VOID + dims + method_declarator + throws_opt + SEMI;
       #endregion
 
       #region class_declaration
@@ -514,24 +514,24 @@ namespace Irony.Samples.Java
 
       class_member_declaration.Rule = SEMI;
       class_member_declaration.Rule |= modifiers + field_declaration;
-      class_member_declaration.Rule |=             field_declaration;
+      class_member_declaration.Rule |= field_declaration;
       class_member_declaration.Rule |= modifiers + method_declaration;
-      class_member_declaration.Rule |=             method_declaration;
+      class_member_declaration.Rule |= method_declaration;
       class_member_declaration.Rule |= modifiers + annotation_declaration;
-      class_member_declaration.Rule |=             annotation_declaration;
+      class_member_declaration.Rule |= annotation_declaration;
       class_member_declaration.Rule |= modifiers + class_declaration;
-      class_member_declaration.Rule |=             class_declaration;
+      class_member_declaration.Rule |= class_declaration;
       class_member_declaration.Rule |= modifiers + enum_declaration;
-      class_member_declaration.Rule |=             enum_declaration;
+      class_member_declaration.Rule |= enum_declaration;
       class_member_declaration.Rule |= modifiers + interface_declaration;
-      class_member_declaration.Rule |=             interface_declaration;
+      class_member_declaration.Rule |= interface_declaration;
 
       // these type_parameters are not actually allowed but it saves a whole lot of work in resolving code.
-      field_declaration.Rule  = type_parameters_opt + primitive_type +           dims + variable_declarators + SEMI;
+      field_declaration.Rule = type_parameters_opt + primitive_type + dims + variable_declarators + SEMI;
       field_declaration.Rule |= type_parameters_opt + templated_qualified_name + dims + variable_declarators + SEMI;
 
-      method_declaration.Rule  = type_parameters_opt + VOID +                            method_declarator + throws_opt + method_body;
-      method_declaration.Rule |= type_parameters_opt + primitive_type +           dims + method_declarator + throws_opt + method_body;
+      method_declaration.Rule = type_parameters_opt + VOID + method_declarator + throws_opt + method_body;
+      method_declaration.Rule |= type_parameters_opt + primitive_type + dims + method_declarator + throws_opt + method_body;
       method_declaration.Rule |= type_parameters_opt + templated_qualified_name + dims + method_declarator + throws_opt + method_body;
 
       method_body.Rule = SEMI;
@@ -540,12 +540,12 @@ namespace Irony.Samples.Java
       instance_initializer.Rule = block;
       static_initializer.Rule = STATIC + block;
 
-      constructor_declaration.Rule  = modifiers + type_parameters_opt + identifier + L_PAR + formal_parameter_list_opt + R_PAR + throws_opt + constructor_body;
-      constructor_declaration.Rule |=             type_parameters_opt + identifier + L_PAR + formal_parameter_list_opt + R_PAR + throws_opt + constructor_body;
+      constructor_declaration.Rule = modifiers + type_parameters_opt + identifier + L_PAR + formal_parameter_list_opt + R_PAR + throws_opt + constructor_body;
+      constructor_declaration.Rule |= type_parameters_opt + identifier + L_PAR + formal_parameter_list_opt + R_PAR + throws_opt + constructor_body;
 
       constructor_body.Rule = L_BRC + block_statements + R_BRC;
 
-      explicit_constructor_invocation.Rule  = type_arguments_opt + THIS + arguments + SEMI;
+      explicit_constructor_invocation.Rule = type_arguments_opt + THIS + arguments + SEMI;
       explicit_constructor_invocation.Rule |= type_arguments_opt + SUPER_TOKEN + arguments + SEMI;
       #endregion
 
@@ -561,7 +561,7 @@ namespace Irony.Samples.Java
       element_value.Rule |= expression;
 
       annotations.Rule = MakeStarRule(annotations, annotation);
-      annotation.Rule  = AT + qualified_name + L_PAR + element_value_pair + R_PAR;
+      annotation.Rule = AT + qualified_name + L_PAR + element_value_pair + R_PAR;
       annotation.Rule |= AT + qualified_name + L_PAR + element_value_pair + COMMA + element_value_pairs + R_PAR;
       annotation.Rule |= AT + qualified_name + L_PAR + element_values + R_PAR;
       annotation.Rule |= AT + qualified_name;
@@ -569,9 +569,9 @@ namespace Irony.Samples.Java
 
       annotation_type_body.Rule = MakeStarRule(annotation_type_body, annotation_type_element_declaration);
       annotation_type_element_declaration.Rule = modifiers + annotation_type_element_rest;
-      annotation_type_element_declaration.Rule |=           annotation_type_element_rest;
+      annotation_type_element_declaration.Rule |= annotation_type_element_rest;
 
-      annotation_type_element_rest.Rule  = type + identifier + L_PAR + R_PAR + DEFAULT + element_value + SEMI;
+      annotation_type_element_rest.Rule = type + identifier + L_PAR + R_PAR + DEFAULT + element_value + SEMI;
       annotation_type_element_rest.Rule |= type + identifier + L_PAR + R_PAR + SEMI;
       annotation_type_element_rest.Rule |= type + variable_declarators + SEMI;
       annotation_type_element_rest.Rule |= class_declaration;
@@ -587,7 +587,7 @@ namespace Irony.Samples.Java
       enum_constant.Rule = annotations + identifier;
       enum_constant.Rule |= annotations + identifier + arguments;
       enum_constant.Rule |= annotations + identifier + arguments + L_BRC + class_body + R_BRC;
-      enum_constant.Rule |= annotations + identifier             + L_BRC + class_body + R_BRC;
+      enum_constant.Rule |= annotations + identifier + L_BRC + class_body + R_BRC;
 
       arguments_opt.Rule = Empty | arguments;
       arguments.Rule = L_PAR + argument_list + R_PAR;
@@ -609,7 +609,7 @@ namespace Irony.Samples.Java
       array_creator_rest.Rule |= dim_exprs;
 
       class_creator_rest.Rule = arguments + class_body_opt;
-      
+
       creator.Rule = type_arguments_opt + created_name + (array_creator_rest | class_creator_rest);
       created_name.Rule = templated_qualified_name;
 
@@ -657,21 +657,21 @@ namespace Irony.Samples.Java
       primary_expression_no_new.Rule |= field_access;
       primary_expression_no_new.Rule |= method_invocation;
 
-      method_invocation.Rule  = expression +                                                                                  arguments;
-      method_invocation.Rule |= expression +                                          DOT + type_arguments_opt + identifier + arguments;
-      method_invocation.Rule |=                    type_arguments_opt + SUPER_TOKEN + DOT + type_arguments_opt + identifier + arguments;
+      method_invocation.Rule = expression + arguments;
+      method_invocation.Rule |= expression + DOT + type_arguments_opt + identifier + arguments;
+      method_invocation.Rule |= type_arguments_opt + SUPER_TOKEN + DOT + type_arguments_opt + identifier + arguments;
       method_invocation.Rule |= expression + DOT + type_arguments_opt + SUPER_TOKEN + DOT + type_arguments_opt + identifier + arguments;
-      method_invocation.Rule |=                    type_arguments_opt + THIS +        DOT + type_arguments_opt + identifier + arguments;
-      method_invocation.Rule |= expression + DOT + type_arguments_opt + THIS +        DOT + type_arguments_opt + identifier + arguments;
+      method_invocation.Rule |= type_arguments_opt + THIS + DOT + type_arguments_opt + identifier + arguments;
+      method_invocation.Rule |= expression + DOT + type_arguments_opt + THIS + DOT + type_arguments_opt + identifier + arguments;
 
-      field_access.Rule  = expression +                                          DOT + type_arguments_opt + identifier;
-      field_access.Rule |=                    type_arguments_opt + SUPER_TOKEN + DOT + type_arguments_opt + identifier;
+      field_access.Rule = expression + DOT + type_arguments_opt + identifier;
+      field_access.Rule |= type_arguments_opt + SUPER_TOKEN + DOT + type_arguments_opt + identifier;
       field_access.Rule |= expression + DOT + type_arguments_opt + SUPER_TOKEN + DOT + type_arguments_opt + identifier;
-      field_access.Rule |=                    type_arguments_opt + THIS +        DOT + type_arguments_opt + identifier;
-      field_access.Rule |= expression + DOT + type_arguments_opt + THIS +        DOT + type_arguments_opt + identifier;
+      field_access.Rule |= type_arguments_opt + THIS + DOT + type_arguments_opt + identifier;
+      field_access.Rule |= expression + DOT + type_arguments_opt + THIS + DOT + type_arguments_opt + identifier;
 
-      assignment_operator.Rule = ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | STAR_ASSIGN | SLASH_ASSIGN | AMP_ASSIGN | 
-                    BAR_ASSIGN | CARET_ASSIGN | PERCENT_ASSIGN | SHL_ASSIGN  | SHR_ASSIGN   | USHR_ASSIGN ;
+      assignment_operator.Rule = ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | STAR_ASSIGN | SLASH_ASSIGN | AMP_ASSIGN |
+                    BAR_ASSIGN | CARET_ASSIGN | PERCENT_ASSIGN | SHL_ASSIGN | SHR_ASSIGN | USHR_ASSIGN;
 
 
       infix_operator.Rule = BAR_BAR | AMP_AMP | BAR | AMP | CARET | EQ | NEQ | LT | GT | LTEQ | GTEQ | SHR | SHL | USHR |
@@ -692,13 +692,13 @@ namespace Irony.Samples.Java
       unary_expression.Rule = prefix_operator + expression;
       unary_expression.Rule |= expression + selector + postfix_operator;
       unary_expression.Rule |= expression + selector;
-      unary_expression.Rule |= expression +            postfix_operator;
+      unary_expression.Rule |= expression + postfix_operator;
 
       binary_expression.Rule = expression + infix_operator + expression;
       trinary_expression.Rule = expression + QMARK + expression + COLON + expression;
 
       assignment_expression.Rule = left_hand_side + assignment_operator + expression;
-      
+
       expression.Rule = primary_expression;
       expression.Rule |= assignment_expression;
       expression.Rule |= unary_expression;
@@ -717,7 +717,7 @@ namespace Irony.Samples.Java
       statement.Rule |= DO + statement + WHILE + L_PAR + expression + R_PAR + SEMI;
       statement.Rule |= TRY + block + catches + FINALLY_TOKEN + block;
       statement.Rule |= TRY + block + catches;
-      statement.Rule |= TRY + block +           FINALLY_TOKEN + block;
+      statement.Rule |= TRY + block + FINALLY_TOKEN + block;
       statement.Rule |= SWITCH + L_PAR + expression + R_PAR + L_BRC + switch_block_statement_groups + R_BRC;
       statement.Rule |= SYNCHRONIZED + L_PAR + expression + R_PAR + block;
       statement.Rule |= RETURN + expression + SEMI;
@@ -734,15 +734,15 @@ namespace Irony.Samples.Java
       for_control.Rule = for_var_control;
       for_control.Rule |= for_init + SEMI + expression + SEMI + for_update;
       for_control.Rule |= for_init + SEMI + expression + SEMI;
-      for_control.Rule |= for_init + SEMI +              SEMI + for_update;
-      for_control.Rule |= for_init + SEMI +              SEMI;
+      for_control.Rule |= for_init + SEMI + SEMI + for_update;
+      for_control.Rule |= for_init + SEMI + SEMI;
 
-      for_var_control.Rule  = modifiers + type + identifier + COLON + expression;
-      for_var_control.Rule |=             type + identifier + COLON + expression;
+      for_var_control.Rule = modifiers + type + identifier + COLON + expression;
+      for_var_control.Rule |= type + identifier + COLON + expression;
 
       for_init.Rule = for_update;
       for_init.Rule |= modifiers + type + variable_declarators;
-      for_init.Rule |=         type + variable_declarators;
+      for_init.Rule |= type + variable_declarators;
 
       for_update.Rule = MakePlusRule(for_update, COMMA, statement_expression);
 
@@ -772,13 +772,13 @@ namespace Irony.Samples.Java
       RegisterOperators(14, Associativity.Left, DOT);
       RegisterOperators(15, Associativity.Neutral, R_PAR, R_BKT);
       #endregion
-#endregion
+      #endregion
 
       Root = compilation_unit;
 
       mSkipTokensInPreview.UnionWith(new Terminal[] { identifier_raw, DOT_RAW, COMMA, L_BKT_RAW, R_BKT, QMARK });
       MarkTransient(
-        #region Transients
+      #region Transients
         type_parameters_opt,
         super_opt,
         interfaces_opt,
@@ -793,7 +793,7 @@ namespace Irony.Samples.Java
         L_BKT,
         L_PAR,
         LT
-        #endregion
+      #endregion
         );
     }
   }

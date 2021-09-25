@@ -1,23 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
   [Flags]
-  public enum OutlineOptions {
+  public enum OutlineOptions
+  {
     None = 0,
     ProduceIndents = 0x01,
     CheckBraces = 0x02,
     CheckOperator = 0x04, //to implement, auto line joining if line ends with operator 
   }
 
-  public class CodeOutlineFilter : TokenFilter {
+  public class CodeOutlineFilter : TokenFilter
+  {
 
     public readonly OutlineOptions Options;
     public readonly KeyTerm ContinuationTerminal; //Terminal
 
-    GrammarData _grammarData; 
+    GrammarData _grammarData;
     Grammar _grammar;
     ParsingContext _context;
     bool _produceIndents;
@@ -33,7 +34,8 @@ namespace Irony.Parsing {
     bool _doubleEof;
 
     #region constructor
-    public CodeOutlineFilter(GrammarData grammarData, OutlineOptions options, KeyTerm continuationTerminal) {
+    public CodeOutlineFilter(GrammarData grammarData, OutlineOptions options, KeyTerm continuationTerminal)
+    {
       _grammarData = grammarData;
       _grammar = grammarData.Grammar;
       _grammar.LanguageFlags |= LanguageFlags.EmitLineStartToken;
@@ -42,15 +44,16 @@ namespace Irony.Parsing {
       if (ContinuationTerminal != null)
         if (!_grammar.NonGrammarTerminals.Contains(ContinuationTerminal))
           _grammarData.Language.Errors.Add(GrammarErrorLevel.Warning, null, Resources.ErrOutlineFilterContSymbol, ContinuationTerminal.Name);
-            //"CodeOutlineFilter: line continuation symbol '{0}' should be added to Grammar.NonGrammarTerminals list.",
+      //"CodeOutlineFilter: line continuation symbol '{0}' should be added to Grammar.NonGrammarTerminals list.",
       _produceIndents = OptionIsSet(OutlineOptions.ProduceIndents);
       _checkBraces = OptionIsSet(OutlineOptions.CheckBraces);
       _checkOperator = OptionIsSet(OutlineOptions.CheckOperator);
-      Reset(); 
+      Reset();
     }
     #endregion
 
-    public override void Reset() {
+    public override void Reset()
+    {
       base.Reset();
       Indents.Clear();
       Indents.Push(0);
@@ -60,20 +63,24 @@ namespace Irony.Parsing {
       PreviousTokenLocation = new SourceLocation();
     }
 
-    public bool OptionIsSet(OutlineOptions option) {
+    public bool OptionIsSet(OutlineOptions option)
+    {
       return (Options & option) != 0;
     }
 
-    public override IEnumerable<Token> BeginFiltering(ParsingContext context, IEnumerable<Token> tokens) {
+    public override IEnumerable<Token> BeginFiltering(ParsingContext context, IEnumerable<Token> tokens)
+    {
       _context = context;
-      foreach (Token token in tokens) {
+      foreach (Token token in tokens)
+      {
         ProcessToken(token);
         while (OutputTokens.Count > 0)
           yield return OutputTokens.Pop();
       }//foreach
     }//method
 
-    public void ProcessToken(Token token) {
+    public void ProcessToken(Token token)
+    {
       SetCurrentToken(token);
       //Quick checks
       if (_isContinuation)
@@ -81,16 +88,17 @@ namespace Irony.Parsing {
       var tokenTerm = token.Terminal;
 
       //check EOF
-      if (tokenTerm == _grammar.Eof) {
+      if (tokenTerm == _grammar.Eof)
+      {
         ProcessEofToken();
         return;
       }
-      
-      if (tokenTerm != _grammar.LineStartTerminal)   return;
+
+      if (tokenTerm != _grammar.LineStartTerminal) return;
       //if we are here, we have LineStart token on new line; first remove it from stream, it should not go to parser
-      OutputTokens.Pop(); 
-      
-      if (PreviousToken == null) return; 
+      OutputTokens.Pop();
+
+      if (PreviousToken == null) return;
 
 
       // first check if there was continuation symbol before
@@ -102,36 +110,44 @@ namespace Irony.Parsing {
 
       //We need to produce Eos token and indents (if _produceIndents is set). 
       // First check indents - they go first into OutputTokens stack, so they will be popped out last
-      if (_produceIndents) {
+      if (_produceIndents)
+      {
         var currIndent = token.Location.Column;
         var prevIndent = Indents.Peek();
-        if (currIndent > prevIndent) {
+        if (currIndent > prevIndent)
+        {
           Indents.Push(currIndent);
           PushOutlineToken(_grammar.Indent, token.Location);
-        } else if (currIndent < prevIndent) {
+        }
+        else if (currIndent < prevIndent)
+        {
           PushDedents(currIndent);
           //check that current indent exactly matches the previous indent 
-          if (Indents.Peek() != currIndent) {
+          if (Indents.Peek() != currIndent)
+          {
             //fire error
-            OutputTokens.Push(new Token(_grammar.SyntaxError, token.Location, string.Empty, Resources.ErrInvDedent)); 
-              // "Invalid dedent level, no previous matching indent found."
+            OutputTokens.Push(new Token(_grammar.SyntaxError, token.Location, string.Empty, Resources.ErrInvDedent));
+            // "Invalid dedent level, no previous matching indent found."
           }
         }
       }//if _produceIndents
       //Finally produce Eos token, but not in command line mode. In command line mode the Eos was already produced 
       // when we encountered Eof on previous line
-      if (_context.Mode != ParseMode.CommandLine) {
+      if (_context.Mode != ParseMode.CommandLine)
+      {
         var eosLocation = ComputeEosLocation();
         PushOutlineToken(_grammar.Eos, eosLocation);
       }
 
     }//method
 
-    private void SetCurrentToken(Token token) {
+    private void SetCurrentToken(Token token)
+    {
       _doubleEof = CurrentToken != null && CurrentToken.Terminal == _grammar.Eof
                       && token.Terminal == _grammar.Eof;
       //Copy CurrentToken to PreviousToken
-      if (CurrentToken != null && CurrentToken.Category == TokenCategory.Content) { //remember only content tokens
+      if (CurrentToken != null && CurrentToken.Category == TokenCategory.Content)
+      { //remember only content tokens
         PreviousToken = CurrentToken;
         _prevIsContinuation = _isContinuation;
         _prevIsOperator = _isOperator;
@@ -150,11 +166,13 @@ namespace Irony.Parsing {
     // Note that tokens will be popped from the OutputTokens stack and sent to parser in the reverse order compared to 
     // the order we pushed them into OutputTokens stack. We have Eof already in stack; we first push dedents, then Eos
     // They will come out to parser in the following order: Eos, Dedents, Eof.
-    private void ProcessEofToken() {
+    private void ProcessEofToken()
+    {
       //First decide whether we need to produce dedents and Eos symbol
       bool pushDedents = false;
       bool pushEos = true;
-      switch (_context.Mode) {
+      switch (_context.Mode)
+      {
         case ParseMode.File:
           pushDedents = _produceIndents; //Do dedents if token filter tracks indents
           break;
@@ -170,20 +188,24 @@ namespace Irony.Parsing {
       //unindent all buffered indents; 
       if (pushDedents) PushDedents(0);
       //now push Eos token - it will be popped first, then dedents, then EOF token
-      if (pushEos) {
+      if (pushEos)
+      {
         var eosLocation = ComputeEosLocation();
         PushOutlineToken(_grammar.Eos, eosLocation);
       }
     }
 
-    private void PushDedents(int untilPosition) {
-      while (Indents.Peek() > untilPosition) {
+    private void PushDedents(int untilPosition)
+    {
+      while (Indents.Peek() > untilPosition)
+      {
         Indents.Pop();
         PushOutlineToken(_grammar.Dedent, CurrentToken.Location);
       }
     }
 
-    private SourceLocation ComputeEosLocation() {
+    private SourceLocation ComputeEosLocation()
+    {
       if (PreviousToken == null)
         return new SourceLocation();
       //Return position at the end of previous token
@@ -192,7 +214,8 @@ namespace Irony.Parsing {
       return new SourceLocation(loc.Position + len, loc.Line, loc.Column + len);
     }
 
-    private void PushOutlineToken(Terminal term, SourceLocation location) {
+    private void PushOutlineToken(Terminal term, SourceLocation location)
+    {
       OutputTokens.Push(new Token(term, location, string.Empty, null));
     }
 

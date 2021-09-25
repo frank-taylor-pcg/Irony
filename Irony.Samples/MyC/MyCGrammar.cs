@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Irony.Parsing;
+﻿using Irony.Parsing;
 
-namespace Demo {
+namespace Demo
+{
   // MyC language, simplified c-like language originally used as an example in VS SDK
   // The following grammar is based on Grammar class by Ben Morrison
   // from his article and sample project "Writing Your First Visual Studio Language Service"
@@ -11,8 +9,10 @@ namespace Demo {
   // Slightly edited - added a hint and fixed one expression
 
   [Language("My C", "1.0", "My C Programming Language")]
-  public class MyCGrammar : Irony.Parsing.Grammar {
-    public MyCGrammar() {
+  public class MyCGrammar : Irony.Parsing.Grammar
+  {
+    public MyCGrammar()
+    {
       #region Declare Terminals Here
       CommentTerminal blockComment = new CommentTerminal("block-comment", "/*", "*/");
       CommentTerminal lineComment = new CommentTerminal("line-comment", "//",

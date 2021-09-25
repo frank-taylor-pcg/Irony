@@ -10,21 +10,21 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using Irony.Parsing;
+using System;
 
-namespace Irony.Ast {
+namespace Irony.Ast
+{
 
-  public class AstNodeEventArgs : EventArgs {
-    public AstNodeEventArgs(ParseTreeNode parseTreeNode) {
+  public class AstNodeEventArgs : EventArgs
+  {
+    public AstNodeEventArgs(ParseTreeNode parseTreeNode)
+    {
       ParseTreeNode = parseTreeNode;
     }
     public readonly ParseTreeNode ParseTreeNode;
-    public object AstNode {
+    public object AstNode
+    {
       get { return ParseTreeNode.AstNode; }
     }
   }
@@ -32,7 +32,8 @@ namespace Irony.Ast {
   public delegate void AstNodeCreator(AstContext context, ParseTreeNode parseNode);
   //public delegate object DefaultAstNodeCreator();
 
-  public class AstNodeConfig {
+  public class AstNodeConfig
+  {
 
     public Type NodeType;
     public object Data; //config data passed to AstNode
@@ -51,9 +52,10 @@ namespace Irony.Ast {
     public int[] PartsMap;
 
 
-    public bool CanCreateNode() {
-      return NodeCreator != null || NodeType != null; 
+    public bool CanCreateNode()
+    {
+      return NodeCreator != null || NodeType != null;
     }
-     
+
   }//AstNodeConfig class
 }

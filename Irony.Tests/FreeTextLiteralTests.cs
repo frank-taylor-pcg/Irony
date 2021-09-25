@@ -1,25 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
-    
+
   [TestClass]
-  public class FreeTextLiteralTests  {
+  public class FreeTextLiteralTests
+  {
     //A special grammar that does not skip whitespace
-    class FreeTextLiteralTestGrammar : Grammar {
+    class FreeTextLiteralTestGrammar : Grammar
+    {
       public string Terminator = "END";
       public FreeTextLiteralTestGrammar(Terminal terminal)
-        : base(caseSensitive: true) {
+        : base(caseSensitive: true)
+      {
         var rule = new BnfExpression(terminal);
         MarkReservedWords(Terminator);
         rule += Terminator;
@@ -28,30 +29,34 @@ namespace Irony.Tests {
       }
 
       //Overrides base method, effectively suppressing skipping whitespaces
-      public override void SkipWhitespace(ISourceStream source) {
-         return;
+      public override void SkipWhitespace(ISourceStream source)
+      {
+        return;
       }
     }//class
 
-    private Parser CreateParser(Terminal terminal) {
+    private Parser CreateParser(Terminal terminal)
+    {
       var grammar = new FreeTextLiteralTestGrammar(terminal);
       return new Parser(grammar);
     }
-    private Token GetFirst(ParseTree tree) {
+    private Token GetFirst(ParseTree tree)
+    {
       return tree.Tokens[0];
     }
 
 
     //The following test method and a fix are contributed by ashmind codeplex user
     [TestMethod]
-    public void TestFreeTextLiteral_Escapes() {
+    public void TestFreeTextLiteral_Escapes()
+    {
       Parser parser; Token token;
 
       //Escapes test
       var term = new FreeTextLiteral("FreeText", ",", ")");
       term.Escapes.Add(@"\\", @"\");
       term.Escapes.Add(@"\,", @",");
-      term.Escapes.Add(@"\)", @")"); 
+      term.Escapes.Add(@"\)", @")");
 
       parser = this.CreateParser(term);
       token = GetFirst(parser.Parse(@"abc\\de\,\)fg,"));

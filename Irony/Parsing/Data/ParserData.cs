@@ -12,29 +12,31 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-
-namespace Irony.Parsing { 
+namespace Irony.Parsing
+{
   // ParserData is a container for all information used by CoreParser in input processing.
   // ParserData is a field in LanguageData structure and is used by CoreParser when parsing intput. 
   // The state graph entry is InitialState state; the state graph encodes information usually contained 
   // in what is known in literature as transiton/goto tables.
   // The graph is built from the language grammar by ParserDataBuilder. 
   using Irony.Parsing.Construction;
-  public class ParserData {
+  public class ParserData
+  {
     public readonly LanguageData Language;
     public ParserState InitialState; //main initial state
     public ParserStateTable InitialStates = new ParserStateTable(); // Lookup table: AugmRoot => InitialState
     public readonly ParserStateList States = new ParserStateList();
-    public ParserAction ErrorAction; 
-    public ParserData(LanguageData language) {
+    public ParserAction ErrorAction;
+    public ParserData(LanguageData language)
+    {
       Language = language;
     }
   }
 
-  public partial class ParserState {
+  public partial class ParserState
+  {
     public readonly string Name;
     public readonly ParserActionTable Actions = new ParserActionTable();
     //Defined for states with a single reduce item; Parser.GetAction returns this action if it is not null.
@@ -53,20 +55,25 @@ namespace Irony.Parsing {
     // Irony reserves the highest order byte for internal use
     public int CustomFlags;
 
-    public ParserState(string name) {
+    public ParserState(string name)
+    {
       Name = name;
     }
-    public void ClearData() {
+    public void ClearData()
+    {
       BuilderData = null;
     }
-    public override string ToString() {
+    public override string ToString()
+    {
       return Name;
     }
-    public override int GetHashCode() {
+    public override int GetHashCode()
+    {
       return Name.GetHashCode();
     }
 
-    public bool CustomFlagIsSet(int flag) {
+    public bool CustomFlagIsSet(int flag)
+    {
       return (CustomFlags & flag) != 0;
     }
   }//class
@@ -77,35 +84,42 @@ namespace Irony.Parsing {
   public class ParserStateTable : Dictionary<NonTerminal, ParserState> { }
 
   [Flags]
-  public enum ProductionFlags {
+  public enum ProductionFlags
+  {
     None = 0,
     HasTerminals = 0x02, //contains terminal
     IsError = 0x04,      //contains Error terminal
     IsEmpty = 0x08,
   }
 
-  public partial class Production {
+  public partial class Production
+  {
     public ProductionFlags Flags;
     public readonly NonTerminal LValue;                              // left-side element
     public readonly BnfTermList RValues = new BnfTermList();         //the right-side elements sequence
     internal readonly Construction.LR0ItemList LR0Items = new Construction.LR0ItemList();        //LR0 items based on this production 
 
-    public Production(NonTerminal lvalue) {
+    public Production(NonTerminal lvalue)
+    {
       LValue = lvalue;
     }//constructor
 
-    public string ToStringQuoted() {
+    public string ToStringQuoted()
+    {
       return "'" + ToString() + "'";
     }
-    public override string ToString() {
+    public override string ToString()
+    {
       return ProductionToString(this, -1); //no dot
     }
-    public static string ProductionToString(Production production, int dotPosition) {
+    public static string ProductionToString(Production production, int dotPosition)
+    {
       char dotChar = '\u00B7'; //dot in the middle of the line
       StringBuilder bld = new StringBuilder();
       bld.Append(production.LValue.Name);
       bld.Append(" -> ");
-      for (int i = 0; i < production.RValues.Count; i++) {
+      for (int i = 0; i < production.RValues.Count; i++)
+      {
         if (i == dotPosition)
           bld.Append(dotChar);
         bld.Append(production.RValues[i].Name);
@@ -119,6 +133,5 @@ namespace Irony.Parsing {
   }//Production class
 
   public class ProductionList : List<Production> { }
-
 
 }//namespace

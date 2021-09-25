@@ -10,14 +10,15 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
-  public class CommentTerminal : Terminal {
-    public CommentTerminal(string name, string startSymbol, params string[] endSymbols) : base(name, TokenCategory.Comment) {
+  public class CommentTerminal : Terminal
+  {
+    public CommentTerminal(string name, string startSymbol, params string[] endSymbols) : base(name, TokenCategory.Comment)
+    {
       this.StartSymbol = startSymbol;
       this.EndSymbols = new StringList();
       EndSymbols.AddRange(endSymbols);
@@ -31,29 +32,36 @@ namespace Irony.Parsing {
 
 
     #region overrides
-    public override void Init(GrammarData grammarData) {
+    public override void Init(GrammarData grammarData)
+    {
       base.Init(grammarData);
       //_endSymbolsFirsts char array is used for fast search for end symbols using String's method IndexOfAny(...)
       _endSymbolsFirsts = new char[EndSymbols.Count];
-      for (int i = 0; i < EndSymbols.Count; i++) {
+      for (int i = 0; i < EndSymbols.Count; i++)
+      {
         string sym = EndSymbols[i];
         _endSymbolsFirsts[i] = sym[0];
         _isLineComment |= sym.Contains("\n");
         if (!_isLineComment)
-          SetFlag(TermFlags.IsMultiline); 
+          SetFlag(TermFlags.IsMultiline);
       }
-      if (this.EditorInfo == null) {
+      if (this.EditorInfo == null)
+      {
         TokenType ttype = _isLineComment ? TokenType.LineComment : TokenType.Comment;
         this.EditorInfo = new TokenEditorInfo(ttype, TokenColor.Comment, TokenTriggers.None);
       }
     }
 
-    public override Token TryMatch(ParsingContext context, ISourceStream source) {
+    public override Token TryMatch(ParsingContext context, ISourceStream source)
+    {
       Token result;
-      if (context.VsLineScanState.Value != 0) {
+      if (context.VsLineScanState.Value != 0)
+      {
         // we are continuing in line mode - restore internal env (none in this case)
         context.VsLineScanState.Value = 0;
-      } else {
+      }
+      else
+      {
         //we are starting from scratch
         if (!BeginMatch(context, source)) return null;
       }
@@ -67,41 +75,48 @@ namespace Irony.Parsing {
       return context.CreateErrorToken(Resources.ErrUnclosedComment);
     }
 
-    private Token CreateIncompleteToken(ParsingContext context, ISourceStream source) {
+    private Token CreateIncompleteToken(ParsingContext context, ISourceStream source)
+    {
       source.PreviewPosition = source.Text.Length;
       Token result = source.CreateToken(this.OutputTerminal);
       result.Flags |= TokenFlags.IsIncomplete;
       context.VsLineScanState.TerminalIndex = this.MultilineIndex;
-      return result; 
+      return result;
     }
 
-    private bool BeginMatch(ParsingContext context, ISourceStream source) {
+    private bool BeginMatch(ParsingContext context, ISourceStream source)
+    {
       //Check starting symbol
       if (!source.MatchSymbol(StartSymbol)) return false;
       source.PreviewPosition += StartSymbol.Length;
-      return true; 
+      return true;
     }
-    private Token CompleteMatch(ParsingContext context, ISourceStream source) {
+    private Token CompleteMatch(ParsingContext context, ISourceStream source)
+    {
       //Find end symbol
-      while (!source.EOF()) {
+      while (!source.EOF())
+      {
         int firstCharPos;
         if (EndSymbols.Count == 1)
           firstCharPos = source.Text.IndexOf(EndSymbols[0], source.PreviewPosition);
-        else 
+        else
           firstCharPos = source.Text.IndexOfAny(_endSymbolsFirsts, source.PreviewPosition);
-        if (firstCharPos < 0) {
+        if (firstCharPos < 0)
+        {
           source.PreviewPosition = source.Text.Length;
           return null; //indicating error
         }
         //We found a character that might start an end symbol; let's see if it is true.
         source.PreviewPosition = firstCharPos;
-        foreach (string endSymbol in EndSymbols) {
-          if (source.MatchSymbol(endSymbol)) {
+        foreach (string endSymbol in EndSymbols)
+        {
+          if (source.MatchSymbol(endSymbol))
+          {
             //We found end symbol; eat end symbol only if it is not line comment.
             // For line comment, leave LF symbol there, it might be important to have a separate LF token
             if (!_isLineComment)
               source.PreviewPosition += endSymbol.Length;
-            return source.CreateToken(this.OutputTerminal); 
+            return source.CreateToken(this.OutputTerminal);
           }//if
         }//foreach endSymbol
         source.PreviewPosition++; //move to the next char and try again    
@@ -109,7 +124,8 @@ namespace Irony.Parsing {
       return null; //might happen if we found a start char of end symbol, but not the full endSymbol
     }//method
 
-    public override IList<string> GetFirsts() {
+    public override IList<string> GetFirsts()
+    {
       return new string[] { StartSymbol };
     }
     #endregion

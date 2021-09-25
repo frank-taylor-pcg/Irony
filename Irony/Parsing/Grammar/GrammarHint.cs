@@ -10,14 +10,11 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using Irony.Parsing.Construction;
+using System.Collections.Generic;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
   public class GrammarHintList : List<GrammarHint> { }
 
@@ -26,7 +23,8 @@ namespace Irony.Parsing {
   // One example is a PreferredActionHint produced by the Grammar.PreferShiftHere() method. It tells parser to perform
   // shift in case of a shift/reduce conflict. It is in fact the default action of LALR parser, so the hint simply suppresses the error 
   // message about the shift/reduce conflict in the grammar.
-  public abstract class GrammarHint : BnfTerm {
+  public abstract class GrammarHint : BnfTerm
+  {
     public GrammarHint() : base("hint") { }
 
     /// <summary> Gives a chance to a custom code in hint to interfere in parser automaton construction.</summary>
@@ -38,12 +36,11 @@ namespace Irony.Parsing {
     /// The owner parameter represents the position in the grammar expression where the hint
     /// is found. The parser state is available through owner.State property. 
     /// </remarks>
-    public virtual void Apply(LanguageData language, LRItem owner) {
+    public virtual void Apply(LanguageData language, LRItem owner)
+    {
       // owner.State  -- the parser state
       // owner.State.BuilderData.Conflicts -- as set of conflict terminals
       // owner.State.Actions -- a dictionary of actions in the current state.
     }
   } //class
-
-
 }

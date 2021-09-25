@@ -10,13 +10,11 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
-  
+namespace Irony.Parsing
+{
+
   //Terminal report group is a facility for improving syntax error messages. 
   // Irony parser/scanner reports an error like "Syntax error, invalid character. Expected: <expected list>."
   // The <expected list> is a list of all terminals (symbols) that are expected in current position.
@@ -26,21 +24,24 @@ namespace Irony.Parsing {
   // Finally, Operator group allows you to specify group name for all operator symbols without listing operators -
   // Irony will collect all operator symbols registered with RegisterOperator method automatically. 
 
-  public enum TermReportGroupType {
+  public enum TermReportGroupType
+  {
     Normal,
     DoNotReport,
     Operator
   }
-  public class TermReportGroup {
+  public class TermReportGroup
+  {
     public string Alias;
     public TermReportGroupType GroupType;
     public TerminalSet Terminals = new TerminalSet();
 
-    public TermReportGroup(string alias, TermReportGroupType groupType, IEnumerable<Terminal> terminals) {
-      Alias = alias; 
+    public TermReportGroup(string alias, TermReportGroupType groupType, IEnumerable<Terminal> terminals)
+    {
+      Alias = alias;
       GroupType = groupType;
       if (terminals != null)
-        Terminals.UnionWith(terminals); 
+        Terminals.UnionWith(terminals);
     }
 
   }//class

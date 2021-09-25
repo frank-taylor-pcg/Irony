@@ -11,23 +11,23 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
   // Helper classes for information used by syntax highlighters and editors
   // TokenColor, TokenTriggers and TokenType are copied from the Visual studio integration assemblies. 
   //  Each terminal/token would have its TokenEditorInfo that can be used either by VS integration package 
   //   or any editor for syntax highligting.
 
-  public class TokenEditorInfo {
+  public class TokenEditorInfo
+  {
     public readonly TokenType Type;
     public readonly TokenColor Color;
     public readonly TokenTriggers Triggers;
     public string ToolTip;
     public int UnderlineType;
-    public TokenEditorInfo(TokenType type, TokenColor color, TokenTriggers triggers) {
+    public TokenEditorInfo(TokenType type, TokenColor color, TokenTriggers triggers)
+    {
       Type = type;
       Color = color;
       Triggers = triggers;
@@ -35,7 +35,8 @@ namespace Irony.Parsing {
 
   }//class
 
-  public enum TokenColor {
+  public enum TokenColor
+  {
     Text = 0,
     Keyword = 1,
     Comment = 2,
@@ -48,7 +49,8 @@ namespace Irony.Parsing {
   //     Specifies a set of triggers that can be fired from an Microsoft.VisualStudio.Package.IScanner
   //     language parser.
   [Flags]
-  public enum TokenTriggers {
+  public enum TokenTriggers
+  {
     // Summary:
     //     Used when no triggers are set. This is the default.
     None = 0,
@@ -91,7 +93,8 @@ namespace Irony.Parsing {
     MethodTip = 240,
   }
 
-  public enum TokenType {
+  public enum TokenType
+  {
     Unknown = 0,
     Text = 1,
     Keyword = 2,
@@ -104,5 +107,4 @@ namespace Irony.Parsing {
     LineComment = 9,
     Comment = 10,
   }
-
 }

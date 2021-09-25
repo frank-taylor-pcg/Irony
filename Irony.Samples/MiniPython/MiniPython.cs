@@ -10,14 +10,12 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Irony.Parsing;
 using Irony.Interpreter;
 using Irony.Interpreter.Ast;
+using Irony.Parsing;
 
-namespace Irony.Samples.MiniPython {
+namespace Irony.Samples.MiniPython
+{
   // The grammar for a very small subset of Python. This is work in progress, 
   // I will be adding more features as we go along, bringing it closer to real python.
   // Current version: expressions, assignments, indented code blocks, function defs, function calls
@@ -26,8 +24,10 @@ namespace Irony.Samples.MiniPython {
   // Python is important test case for Irony as an indentation-sensitive language.
 
   [Language("MiniPython", "0.2", "Micro-subset of Python, work in progress")]
-  public class MiniPythonGrammar : InterpretedLanguageGrammar {
-    public MiniPythonGrammar() : base(caseSensitive: true) {
+  public class MiniPythonGrammar : InterpretedLanguageGrammar
+  {
+    public MiniPythonGrammar() : base(caseSensitive: true)
+    {
 
       // 1. Terminals
       var number = TerminalFactory.CreatePythonNumber("number");
@@ -80,7 +80,7 @@ namespace Irony.Samples.MiniPython {
       ParamList.Rule = MakeStarRule(ParamList, comma, identifier);
       ArgList.Rule = MakeStarRule(ArgList, comma, Expr);
       FunctionDef.Rule = "def" + identifier + "(" + ParamList + ")" + colon + Eos + Block;
-      FunctionDef.NodeCaptionTemplate = "def #{1}(...)"; 
+      FunctionDef.NodeCaptionTemplate = "def #{1}(...)";
       FunctionCall.Rule = identifier + "(" + ArgList + ")";
       FunctionCall.NodeCaptionTemplate = "call #{0}(...)";
 
@@ -102,12 +102,12 @@ namespace Irony.Samples.MiniPython {
 
       // 7. Error recovery rule
       ExtStmt.ErrorRule = SyntaxError + Eos;
-      FunctionDef.ErrorRule = SyntaxError + Dedent; 
+      FunctionDef.ErrorRule = SyntaxError + Dedent;
 
       // 8. Syntax error reporting
       AddToNoReportGroup("(");
-      AddToNoReportGroup(Eos); 
-      AddOperatorReportGroup("operator"); 
+      AddToNoReportGroup(Eos);
+      AddOperatorReportGroup("operator");
 
       // 9. Initialize console attributes
       ConsoleTitle = "Mini-Python Console";
@@ -121,16 +121,17 @@ namespace Irony.Samples.MiniPython {
 
 Press Ctrl-C to exit the program at any time.
 ";
-      ConsolePrompt = ">>>"; 
-      ConsolePromptMoreInput = "..."; 
-      
+      ConsolePrompt = ">>>";
+      ConsolePromptMoreInput = "...";
+
       // 10. Language flags
       this.LanguageFlags = LanguageFlags.NewLineBeforeEOF | LanguageFlags.CreateAst | LanguageFlags.SupportsBigInt;
 
     }//constructor
 
-    public override void CreateTokenFilters(LanguageData language, TokenFilterList filters) {
-      var outlineFilter = new CodeOutlineFilter(language.GrammarData, 
+    public override void CreateTokenFilters(LanguageData language, TokenFilterList filters)
+    {
+      var outlineFilter = new CodeOutlineFilter(language.GrammarData,
         OutlineOptions.ProduceIndents | OutlineOptions.CheckBraces, ToTerm(@"\")); // "\" is continuation symbol
       filters.Add(outlineFilter);
     }

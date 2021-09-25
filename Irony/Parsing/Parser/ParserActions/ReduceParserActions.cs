@@ -1,25 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Irony.Parsing {
-
+﻿namespace Irony.Parsing
+{
   /// <summary>Base class for more specific reduce actions. </summary>
-  public partial class ReduceParserAction: ParserAction {
+  public partial class ReduceParserAction : ParserAction
+  {
     public readonly Production Production;
-  
-    public ReduceParserAction(Production production) {
-      Production = production; 
+
+    public ReduceParserAction(Production production)
+    {
+      Production = production;
     }
-    public override string ToString() {
+    public override string ToString()
+    {
       return string.Format(Resources.LabelActionReduce, Production.ToStringQuoted());
     }
 
     /// <summary>Factory method for creating a proper type of reduce parser action. </summary>
     /// <param name="production">A Production to reduce.</param>
     /// <returns>Reduce action.</returns>
-    public static ReduceParserAction Create(Production production) {
+    public static ReduceParserAction Create(Production production)
+    {
       var nonTerm = production.LValue;
       //List builder (non-empty production for list non-terminal) is a special case 
       var isList = nonTerm.Flags.IsSet(TermFlags.IsList);
@@ -34,19 +33,22 @@ namespace Irony.Parsing {
         return new ReduceParserAction(production);
     }
 
-    public override void Execute(ParsingContext context) {
-      var savedParserInput = context.CurrentParserInput; 
+    public override void Execute(ParsingContext context)
+    {
+      var savedParserInput = context.CurrentParserInput;
       context.CurrentParserInput = GetResultNode(context);
       CompleteReduce(context);
       context.CurrentParserInput = savedParserInput;
     }
 
-    protected virtual ParseTreeNode GetResultNode(ParsingContext context) {
+    protected virtual ParseTreeNode GetResultNode(ParsingContext context)
+    {
       var childCount = Production.RValues.Count;
       int firstChildIndex = context.ParserStack.Count - childCount;
       var span = context.ComputeStackRangeSpan(childCount);
       var newNode = new ParseTreeNode(Production.LValue, span);
-      for (int i = 0; i < childCount; i++) {
+      for (int i = 0; i < childCount; i++)
+      {
         var childNode = context.ParserStack[firstChildIndex + i];
         if (childNode.IsPunctuationOrEmptyTransient()) continue; //skip punctuation or empty transient nodes
         newNode.ChildNodes.Add(childNode);
@@ -54,8 +56,9 @@ namespace Irony.Parsing {
       return newNode;
     }
     //Completes reduce: pops child nodes from the stack and pushes result node into the stack
-    protected void CompleteReduce(ParsingContext context) {
-      var resultNode = context.CurrentParserInput; 
+    protected void CompleteReduce(ParsingContext context)
+    {
+      var resultNode = context.CurrentParserInput;
       var childCount = Production.RValues.Count;
       //Pop stack
       context.ParserStack.Pop(childCount);
@@ -71,7 +74,7 @@ namespace Irony.Parsing {
       //Push new node into stack and move to new state
       //First read the state from top of the stack 
       context.CurrentParserState = context.ParserStack.Top.State;
-      if (context.TracingEnabled) 
+      if (context.TracingEnabled)
         context.AddTrace(Resources.MsgTracePoppedState, Production.LValue.Name);
       #region comments on special case
       //Special case: if a non-terminal is Transient (ex: BinOp), then result node is not this NonTerminal, but its its child (ex: symbol). 
@@ -92,43 +95,50 @@ namespace Irony.Parsing {
     // where BinOp is an OR-combination of operators. 
     // During parsing, when 'expr, BinOp, expr' is on the top of the stack, 
     // and incoming symbol is operator, we need to use precedence rule for deciding on the action. 
-    private void InheritPrecedence(ParseTreeNode node) {
-      for (int i = 0; i < node.ChildNodes.Count; i++) {
+    private void InheritPrecedence(ParseTreeNode node)
+    {
+      for (int i = 0; i < node.ChildNodes.Count; i++)
+      {
         var child = node.ChildNodes[i];
         if (child.Precedence == Terminal.NoPrecedence) continue;
         node.Precedence = child.Precedence;
         node.Associativity = child.Associativity;
-        return; 
+        return;
       }
     }
-  
+
   }//class
 
   /// <summary>Reduces non-terminal marked as Transient by MarkTransient method. </summary>
-  public class ReduceTransientParserAction : ReduceParserAction {
+  public class ReduceTransientParserAction : ReduceParserAction
+  {
     public ReduceTransientParserAction(Production production) : base(production) { }
 
-    protected override ParseTreeNode GetResultNode(ParsingContext context) {
+    protected override ParseTreeNode GetResultNode(ParsingContext context)
+    {
       var topIndex = context.ParserStack.Count - 1;
       var childCount = Production.RValues.Count;
-      for (int i = 0; i < childCount; i++) {
+      for (int i = 0; i < childCount; i++)
+      {
         var child = context.ParserStack[topIndex - i];
         if (child.IsPunctuationOrEmptyTransient()) continue;
         return child;
       }
       //Otherwise return an empty transient node; if it is part of the list, the list will skip it
       var span = context.ComputeStackRangeSpan(childCount);
-      return new ParseTreeNode(Production.LValue, span); 
-      
+      return new ParseTreeNode(Production.LValue, span);
+
     }
   }//class
 
   /// <summary>Reduces list created by MakePlusRule or MakeListRule methods. </summary>
-  public class ReduceListBuilderParserAction : ReduceParserAction {
-    
+  public class ReduceListBuilderParserAction : ReduceParserAction
+  {
+
     public ReduceListBuilderParserAction(Production production) : base(production) { }
 
-    protected override ParseTreeNode GetResultNode(ParsingContext context) {
+    protected override ParseTreeNode GetResultNode(ParsingContext context)
+    {
       int childCount = Production.RValues.Count;
       int firstChildIndex = context.ParserStack.Count - childCount;
       var listNode = context.ParserStack[firstChildIndex]; //get the list already created - it is the first child node
@@ -137,26 +147,28 @@ namespace Irony.Parsing {
       if (listMember.IsPunctuationOrEmptyTransient())
         return listNode;
       listNode.ChildNodes.Add(listMember);
-      return listNode; 
+      return listNode;
     }
   }//class
 
   //List container is an artificial non-terminal created by MakeStarRule method; the actual list is a direct child. 
-  public class ReduceListContainerParserAction : ReduceParserAction {
+  public class ReduceListContainerParserAction : ReduceParserAction
+  {
     public ReduceListContainerParserAction(Production production) : base(production) { }
 
-    protected override ParseTreeNode GetResultNode(ParsingContext context) {
+    protected override ParseTreeNode GetResultNode(ParsingContext context)
+    {
       int childCount = Production.RValues.Count;
       int firstChildIndex = context.ParserStack.Count - childCount;
       var span = context.ComputeStackRangeSpan(childCount);
       var newNode = new ParseTreeNode(Production.LValue, span);
-      if (childCount > 0) { //if it is not empty production - might happen for MakeStarRule
+      if (childCount > 0)
+      { //if it is not empty production - might happen for MakeStarRule
         var listNode = context.ParserStack[firstChildIndex]; //get the transient list with all members - it is the first child node
         newNode.ChildNodes.AddRange(listNode.ChildNodes);    //copy all list members
       }
-      return newNode; 
-      
+      return newNode;
+
     }
   }//class
-
 }//ns

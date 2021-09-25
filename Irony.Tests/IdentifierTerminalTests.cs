@@ -1,23 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
   [TestClass]
-  public class IdentifierTerminalTests {
+  public class IdentifierTerminalTests
+  {
 
     [TestMethod]
-    public void TestIdentifier_CSharp() {
+    public void TestIdentifier_CSharp()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(TerminalFactory.CreateCSharpIdentifier("Identifier"));
@@ -41,10 +41,11 @@ namespace Irony.Tests {
     }//method
 
     [TestMethod]
-    public void TestIdentifier_CaseRestrictions() {
+    public void TestIdentifier_CaseRestrictions()
+    {
       Parser parser; Token token;
 
-      var id = new IdentifierTerminal("identifier"); 
+      var id = new IdentifierTerminal("identifier");
       id.CaseRestriction = CaseRestriction.None;
       parser = TestHelper.CreateParser(id);
 
@@ -61,7 +62,7 @@ namespace Irony.Tests {
       id.CaseRestriction = CaseRestriction.FirstUpper;
       parser = TestHelper.CreateParser(id);
       token = parser.ParseInput("cDE");
-      Assert.AreEqual(TokenCategory.Error,  token.Category, "Erroneously recognized an identifier cDE with FirstUpper restriction.");
+      Assert.AreEqual(TokenCategory.Error, token.Category, "Erroneously recognized an identifier cDE with FirstUpper restriction.");
       token = parser.ParseInput("CdE");
       Assert.IsTrue(token != null && token.ValueString == "CdE", "Failed to scan identifier CdE with FirstUpper restriction.");
 

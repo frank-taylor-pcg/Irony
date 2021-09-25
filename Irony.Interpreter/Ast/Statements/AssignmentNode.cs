@@ -10,25 +10,24 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
-
 using Irony.Ast;
 using Irony.Parsing;
+using System.Linq.Expressions;
 
-namespace Irony.Interpreter.Ast {
-  public class AssignmentNode : AstNode {
+namespace Irony.Interpreter.Ast
+{
+  public class AssignmentNode : AstNode
+  {
     public AstNode Target;
     public string AssignmentOp;
     public bool IsAugmented; // true if it is augmented operation like "+="
-    public ExpressionType BinaryExpressionType; 
+    public ExpressionType BinaryExpressionType;
     public AstNode Expression;
     private OperatorImplementation _lastUsed;
     private int _failureCount;
 
-    public override void Init(AstContext context, ParseTreeNode treeNode) {
+    public override void Init(AstContext context, ParseTreeNode treeNode)
+    {
       base.Init(context, treeNode);
       var nodes = treeNode.GetMappedChildNodes();
       Target = AddChild(NodeUseType.ValueWrite, "To", nodes[0]);
@@ -42,7 +41,8 @@ namespace Irony.Interpreter.Ast {
       AsString = AssignmentOp + " (assignment)";
       // TODO: this is not always correct: in Pascal the assignment operator is :=.
       IsAugmented = AssignmentOp.Length > 1;
-      if (IsAugmented) {
+      if (IsAugmented)
+      {
 
         var ictxt = context as InterpreterAstContext;
         base.ExpressionType = ictxt.OperatorHandler.GetOperatorExpressionType(AssignmentOp);
@@ -51,7 +51,8 @@ namespace Irony.Interpreter.Ast {
       }
     }
 
-    protected override object DoEvaluate(ScriptThread thread) {
+    protected override object DoEvaluate(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       if (IsAugmented)
         Evaluate = EvaluateAugmentedFast;
@@ -60,11 +61,12 @@ namespace Irony.Interpreter.Ast {
       //call self-evaluate again, now to call real methods
       var result = this.Evaluate(thread);
       thread.CurrentNode = Parent; //standard epilog
-      return result; 
+      return result;
     }
 
 
-    private object EvaluateSimple(ScriptThread thread) {
+    private object EvaluateSimple(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       var value = Expression.Evaluate(thread);
       Target.SetValue(thread, value);
@@ -72,15 +74,20 @@ namespace Irony.Interpreter.Ast {
       return value;
     }
 
-    private object EvaluateAugmentedFast(ScriptThread thread) {
+    private object EvaluateAugmentedFast(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       var value = Target.Evaluate(thread);
       var exprValue = Expression.Evaluate(thread);
-      object result = null; 
-      if (_lastUsed != null) {
-        try {
+      object result = null;
+      if (_lastUsed != null)
+      {
+        try
+        {
           result = _lastUsed.EvaluateBinary(value, exprValue);
-        } catch {
+        }
+        catch
+        {
           _failureCount++;
           // if failed 3 times, change to method without direct try
           if (_failureCount > 3)
@@ -94,7 +101,8 @@ namespace Irony.Interpreter.Ast {
       return result;
     }
 
-    private object EvaluateAugmented(ScriptThread thread) {
+    private object EvaluateAugmented(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       var value = Target.Evaluate(thread);
       var exprValue = Expression.Evaluate(thread);
@@ -103,7 +111,5 @@ namespace Irony.Interpreter.Ast {
       thread.CurrentNode = Parent; //standard epilog
       return result;
     }
-
-  
   }
 }

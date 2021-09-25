@@ -1,60 +1,63 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Irony.Parsing;
-using Irony.Interpreter.Ast;
+﻿using Irony.Parsing;
 
 //Tests of Visual Studio integration functionality
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
-  public class IntegrationTestGrammar : Grammar {
-    public IntegrationTestGrammar() {
+  public class IntegrationTestGrammar : Grammar
+  {
+    public IntegrationTestGrammar()
+    {
       var comment = new CommentTerminal("comment", "/*", "*/");
       base.NonGrammarTerminals.Add(comment);
       var str = new StringLiteral("str", "'", StringOptions.AllowsLineBreak);
       var stmt = new NonTerminal("stmt");
       stmt.Rule = str | Empty;
-      this.Root = stmt; 
+      this.Root = stmt;
     }
   }//class
 
   [TestClass]
-  public class IntegrationTests {
+  public class IntegrationTests
+  {
     Grammar _grammar;
-    LanguageData _language; 
-    Scanner _scanner; 
-    ParsingContext _context; 
-    int _state; 
+    LanguageData _language;
+    Scanner _scanner;
+    ParsingContext _context;
+    int _state;
 
-    private void Init(Grammar grammar) {
+    private void Init(Grammar grammar)
+    {
       _grammar = grammar;
-      _language = new LanguageData(_grammar); 
+      _language = new LanguageData(_grammar);
       var parser = new Parser(_language);
       _scanner = parser.Scanner;
       _context = parser.Context;
       _context.Mode = ParseMode.VsLineScan;
     }
 
-    private void SetSource(string text) {
-      _scanner.VsSetSource(text, 0); 
+    private void SetSource(string text)
+    {
+      _scanner.VsSetSource(text, 0);
     }
-    private Token Read() {
+    private Token Read()
+    {
       Token token = _scanner.VsReadToken(ref _state);
-      return token; 
+      return token;
     }
 
     [TestMethod]
-    public void TestIntegration_VsScanningComment() {
+    public void TestIntegration_VsScanningComment()
+    {
       Init(new IntegrationTestGrammar());
       SetSource(" /*  ");
       Token token = Read();
@@ -76,7 +79,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestIntegration_VsScanningString() {
+    public void TestIntegration_VsScanningString()
+    {
       Init(new IntegrationTestGrammar());
       SetSource(" 'abc");
       Token token = Read();

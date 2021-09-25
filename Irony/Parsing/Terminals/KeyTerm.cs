@@ -12,31 +12,35 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
-  public class KeyTermTable : Dictionary<string, KeyTerm> {
-    public KeyTermTable(StringComparer comparer) : base(100, comparer) {}
+  public class KeyTermTable : Dictionary<string, KeyTerm>
+  {
+    public KeyTermTable(StringComparer comparer) : base(100, comparer) { }
   }
   public class KeyTermList : List<KeyTerm> { }
 
   //Keyterm is a keyword or a special symbol used in grammar rules, for example: begin, end, while, =, *, etc.
   // So "key" comes from the Keyword. 
-  public class KeyTerm : Terminal {
-    public KeyTerm(string text, string name)  : base(name) {
+  public class KeyTerm : Terminal
+  {
+    public KeyTerm(string text, string name) : base(name)
+    {
       Text = text;
       base.ErrorAlias = name;
       this.Flags |= TermFlags.NoAstNode;
     }
 
-    public string Text {get; private set;}
+    public string Text { get; private set; }
 
     //Normally false, meaning keywords (symbols in grammar consisting of letters) cannot be followed by a letter or digit
-    public bool AllowAlphaAfterKeyword = false; 
+    public bool AllowAlphaAfterKeyword = false;
 
     #region overrides: TryMatch, Init, GetPrefixes(), ToString() 
-    public override void Init(GrammarData grammarData) {
+    public override void Init(GrammarData grammarData)
+    {
       base.Init(grammarData);
 
       #region comments about keyterms priority
@@ -49,15 +53,15 @@ namespace Irony.Parsing {
       // As a result, Scanner would first try to match "+=", longer symbol, and if it fails, it will try "+". 
       // Reserved words are the opposite - they have the highest priority
       #endregion
-      if (Flags.IsSet(TermFlags.IsReservedWord)) 
+      if (Flags.IsSet(TermFlags.IsReservedWord))
         base.Priority = TerminalPriority.ReservedWords + Text.Length; //the longer the word, the higher is the priority
-      else 
+      else
         base.Priority = TerminalPriority.Low + Text.Length;
       //Setup editor info      
       if (this.EditorInfo != null) return;
       TokenType tknType = TokenType.Identifier;
       if (Flags.IsSet(TermFlags.IsOperator))
-        tknType |= TokenType.Operator; 
+        tknType |= TokenType.Operator;
       else if (Flags.IsSet(TermFlags.IsDelimiter | TermFlags.IsPunctuation))
         tknType |= TokenType.Delimiter;
       TokenTriggers triggers = TokenTriggers.None;
@@ -65,50 +69,55 @@ namespace Irony.Parsing {
         triggers |= TokenTriggers.MatchBraces;
       if (this.Flags.IsSet(TermFlags.IsMemberSelect))
         triggers |= TokenTriggers.MemberSelect;
-      TokenColor color = TokenColor.Text; 
+      TokenColor color = TokenColor.Text;
       if (Flags.IsSet(TermFlags.IsKeyword))
         color = TokenColor.Keyword;
       this.EditorInfo = new TokenEditorInfo(tknType, color, triggers);
     }
 
-    public override Token TryMatch(ParsingContext context, ISourceStream source) {
+    public override Token TryMatch(ParsingContext context, ISourceStream source)
+    {
       if (!source.MatchSymbol(Text))
         return null;
       source.PreviewPosition += Text.Length;
       //In case of keywords, check that it is not followed by letter or digit
-      if (this.Flags.IsSet(TermFlags.IsKeyword) && !AllowAlphaAfterKeyword) {
+      if (this.Flags.IsSet(TermFlags.IsKeyword) && !AllowAlphaAfterKeyword)
+      {
         var previewChar = source.PreviewChar;
         if (char.IsLetterOrDigit(previewChar) || previewChar == '_') return null; //reject
       }
       var token = source.CreateToken(this.OutputTerminal, Text);
-      return token; 
+      return token;
     }
 
-    public override IList<string> GetFirsts() {
+    public override IList<string> GetFirsts()
+    {
       return new string[] { Text };
     }
-    public override string ToString() {
-      if (Name != Text) return Name; 
+    public override string ToString()
+    {
+      if (Name != Text) return Name;
       return Text;
     }
-    public override string TokenToString(Token token) {
-      var keyw = Flags.IsSet(TermFlags.IsKeyword)? Resources.LabelKeyword : Resources.LabelKeySymbol ; //"(Keyword)" : "(Key symbol)"
+    public override string TokenToString(Token token)
+    {
+      var keyw = Flags.IsSet(TermFlags.IsKeyword) ? Resources.LabelKeyword : Resources.LabelKeySymbol; //"(Keyword)" : "(Key symbol)"
       var result = (token.ValueString ?? token.Text) + " " + keyw;
-      return result; 
+      return result;
     }
     #endregion
 
     [System.Diagnostics.DebuggerStepThrough]
-    public override bool Equals(object obj) {
+    public override bool Equals(object obj)
+    {
       return base.Equals(obj);
     }
 
     [System.Diagnostics.DebuggerStepThrough]
-    public override int GetHashCode() {
+    public override int GetHashCode()
+    {
       return Text.GetHashCode();
     }
 
   }//class
-
-
 }

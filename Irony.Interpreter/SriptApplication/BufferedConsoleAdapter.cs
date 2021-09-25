@@ -10,58 +10,68 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using Irony.Parsing;
+using System.Text;
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
 
   // Buffered implementation of IConsoleAdapter with StringBuilder output.
-  public class BufferedConsoleAdapter : IConsoleAdapter {
+  public class BufferedConsoleAdapter : IConsoleAdapter
+  {
     private StringBuilder OutputBuffer = new StringBuilder();
     private object _lockObject = new object();
 
     public bool Canceled { get; set; }
 
-    public void Write(string text) {
-      lock(_lockObject) {
+    public void Write(string text)
+    {
+      lock (_lockObject)
+      {
         OutputBuffer.Append(text);
       }
     }
 
-    public void WriteLine(string text) {
-      lock(_lockObject) {
+    public void WriteLine(string text)
+    {
+      lock (_lockObject)
+      {
         OutputBuffer.AppendLine(text);
       }
     }
 
-    public void SetTextStyle(ConsoleTextStyle style) {
+    public void SetTextStyle(ConsoleTextStyle style)
+    {
       // not supported
     }
 
-    public int Read() {
+    public int Read()
+    {
       return 0; // not supported
     }
 
-    public virtual string ReadLine() {
+    public virtual string ReadLine()
+    {
       return null; // not supported
     }
 
-    public void SetTitle(string title) {
+    public void SetTitle(string title)
+    {
       // not supported
     }
 
-    public void Clear() {
-      lock (_lockObject) {
+    public void Clear()
+    {
+      lock (_lockObject)
+      {
         OutputBuffer.Clear();
       }
     }
 
-    public string GetOutput() {
-      lock (_lockObject) {
+    public string GetOutput()
+    {
+      lock (_lockObject)
+      {
         return OutputBuffer.ToString();
       }
     }

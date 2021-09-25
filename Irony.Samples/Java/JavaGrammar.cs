@@ -15,7 +15,7 @@ namespace Irony.Samples.Java
       var delimitedComment = new CommentTerminal("DelimitedComment", "/*", "*/");
       NonGrammarTerminals.Add(singleLineComment);
       NonGrammarTerminals.Add(delimitedComment);
-      
+
       MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":", "@");
 
       InitializeSyntax();
@@ -31,8 +31,7 @@ namespace Irony.Samples.Java
       base.OnScannerSelectTerminal(context);
     }
 
-    private void ResolveConflicts(ParsingContext context, CustomParserAction action) { 
-    }
+    private void ResolveConflicts(ParsingContext context, CustomParserAction action) { }
     /* BROKEN
     public override void OnResolvingConflict(ConflictResolutionArgs args)
     {

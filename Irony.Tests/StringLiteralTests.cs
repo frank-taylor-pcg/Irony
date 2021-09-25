@@ -1,30 +1,31 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
   [TestClass]
-  public class StringLiteralTests  {
+  public class StringLiteralTests
+  {
 
 
     //handy option for stringLiteral tests: we use single quotes in test strings, and they are replaced by double quotes here 
-    private static string ReplaceQuotes(string input) {
+    private static string ReplaceQuotes(string input)
+    {
       return input.Replace("'", "\"");
     }
 
     //The following test method and a fix are contributed by ashmind codeplex user
     [TestMethod]
-    public void TestString_QuoteJustBeforeEof() {
+    public void TestString_QuoteJustBeforeEof()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(new StringLiteral("String", "'"));
@@ -34,7 +35,8 @@ namespace Irony.Tests {
 
 
     [TestMethod]
-    public void TestString_Python() {
+    public void TestString_Python()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(TerminalFactory.CreatePythonString("String"));
@@ -49,7 +51,7 @@ namespace Irony.Tests {
       Assert.IsTrue((string)token.Value == "abcd\nefg", "Failed to process escaped line-break char.");
       token = parser.ParseInput(@"r'00\a\b\t\n\v\f\r00'  ");
       Assert.IsTrue((string)token.Value == @"00\a\b\t\n\v\f\r00", "Failed to process string with disabled escapes.");
-      
+
       //2. Double quotes - we use TryMatchDoubles which replaces single quotes with doubles and then calls TryMatch
       token = parser.ParseInput(ReplaceQuotes(@"'00\a\b\t\n\v\f\r\'\\00'  "));
       Assert.IsTrue((string)token.Value == "00\a\b\t\n\v\f\r\"\\00", "Failed to process escaped characters.");
@@ -64,7 +66,8 @@ namespace Irony.Tests {
     }//method
 
     [TestMethod]
-    public void TestString_CSharp() {
+    public void TestString_CSharp()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(TerminalFactory.CreateCSharpString("String"));
@@ -73,7 +76,7 @@ namespace Irony.Tests {
       Assert.IsTrue((string)token.Value == @"abcd\", "Failed to process double escape char at the end of the string.");
 
       token = parser.ParseInput('"' + @"abcd\\\" + '"' + "efg" + '"' + "   ");
-      Assert.IsTrue((string)token.Value == @"abcd\" + '"' + "efg" , @"Failed to process '\\\ + double-quote' inside the string.");
+      Assert.IsTrue((string)token.Value == @"abcd\" + '"' + "efg", @"Failed to process '\\\ + double-quote' inside the string.");
 
       //with Escapes
       token = parser.ParseInput(ReplaceQuotes(@"'00\a\b\t\n\v\f\r\'\\00'  "));
@@ -113,7 +116,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestString_CSharpChar() {
+    public void TestString_CSharpChar()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(TerminalFactory.CreateCSharpChar("Char"));
@@ -129,7 +133,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestString_VB() {
+    public void TestString_VB()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(TerminalFactory.CreateVbString("String"));
@@ -138,10 +143,10 @@ namespace Irony.Tests {
       Assert.IsTrue((string)token.Value == @"00\a\b\t\n\v\f\r\\00", "Failed to process string with \\ characters.");
       token = parser.ParseInput(ReplaceQuotes("'abcd\nefg'  "));
       Assert.IsTrue(token.IsError(), "Failed to detect erroneous multi-line string.");
-      token = parser.ParseInput(ReplaceQuotes("'abcd''efg'  ")); 
+      token = parser.ParseInput(ReplaceQuotes("'abcd''efg'  "));
       Assert.IsTrue((string)token.Value == "abcd\"efg", "Failed to process a string with doubled double-quote char.");
       //Test char suffix "c"
-      token = parser.ParseInput(ReplaceQuotes("'A'c  ")); 
+      token = parser.ParseInput(ReplaceQuotes("'A'c  "));
       Assert.IsTrue((char)token.Value == 'A', "Failed to process a character");
       token = parser.ParseInput(ReplaceQuotes("''c  "));
       Assert.IsTrue(token.IsError(), "Failed to detect an error for an empty char.");

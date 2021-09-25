@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
-namespace Irony.WinForms {
+namespace Irony.WinForms
+{
   /// <summary>
   /// Specifies the border style for the control.
   /// </summary>
-  public enum BorderStyleEx {
+  public enum BorderStyleEx
+  {
     /// <summary>
     /// No border.
     /// </summary>

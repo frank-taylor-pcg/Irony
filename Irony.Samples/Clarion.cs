@@ -1,24 +1,24 @@
-﻿using System;
+﻿using Irony.Parsing;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-using Irony.Parsing; 
-
-namespace Irony.Samples {
+namespace Irony.Samples
+{
   [Language("Clarion", "0.1", "Clarion grammar.")]
-  public class ClarionGrammar : Grammar {
+  public class ClarionGrammar : Grammar
+  {
     //Special words - those that may not be used as proc names
     public readonly HashSet<string> SpecialWords;
-    CommentTerminal _comment; 
+    CommentTerminal _comment;
 
-    public ClarionGrammar() : base(false) { //case insensitive
+    public ClarionGrammar() : base(false)
+    { //case insensitive
       base.GrammarComments = "Clarion grammar for parsing Clarion sources.";
 
       //Terminals
       var comment = new CommentTerminal("comment", "!", "\n");
       this.NonGrammarTerminals.Add(comment);
-      _comment = comment; 
+      _comment = comment;
       var identifier = new IdentifierTerminal("identifier", ":", string.Empty);
       var label = new IdentifierTerminal("label", ":", string.Empty);
       label.ValidateToken += label_ValidateToken;
@@ -31,12 +31,12 @@ namespace Irony.Samples {
       number.AddSuffix("o", TypeCode.Int64);
       number.AddSuffix("h", TypeCode.Int64);
       number.ValidateToken += number_ValidateToken;
-     
+
       var string_lit = new StringLiteral("string_lit", "'", StringOptions.AllowsDoubledQuote | StringOptions.NoEscapes);
 
       var comma = ToTerm(",");
       var not = ToTerm("NOT");
-      
+
       //Non-terminals
       var source_file = new NonTerminal("source_file");
       var main_file = new NonTerminal("main_file");
@@ -66,7 +66,7 @@ namespace Irony.Samples {
       var map_opt = new NonTerminal("map_opt");
       var map_elem = new NonTerminal("map_elem");
       var map_elem_list = new NonTerminal("map_elem_list");
-      
+
       var proc_decl_list = new NonTerminal("proc_decl_list");
       var proc_decl = new NonTerminal("proc_decl");
       var proc_impl_list = new NonTerminal("proc_impl_list");
@@ -93,10 +93,10 @@ namespace Irony.Samples {
       var param_init_opt = new NonTerminal("param_init_opt");
       var type_args_opt = new NonTerminal("type_args_opt");
       var type_arg_list = new NonTerminal("type_arg_list");
-      var type_arg = new NonTerminal("type_arg"); 
+      var type_arg = new NonTerminal("type_arg");
 
       var label_opt = new NonTerminal("label_opt");
-      var param_list = new NonTerminal("param_list"); 
+      var param_list = new NonTerminal("param_list");
       var param = new NonTerminal("param");
       var param_list_par_opt = new NonTerminal("param_list_par_opt");
       var attr_list_tail_opt = new NonTerminal("attr_list_tail_opt");
@@ -104,14 +104,14 @@ namespace Irony.Samples {
       var attr_def = new NonTerminal("attr_def");
       var return_line_opt = new NonTerminal("return_line_opt");
       var end_line = new NonTerminal("end_line");
-      
+
       //Rules 
       base.Root = source_file;
       source_file.Rule = main_file | member_file;
 
       //whitespace - includes compiler directives
       wspace.Rule = NewLine + ws_lines;// +ReduceHere();
-      ws_lines.Rule =  MakeStarRule(ws_lines, ws_line);
+      ws_lines.Rule = MakeStarRule(ws_lines, ws_line);
       ws_line.Rule = compiler_dir | PreferShiftHere() + NewLine + ReduceHere();
       //compiler_dir_line.Rule = compiler_dir;
       compiler_dir.Rule = cdir_include | cdir_equate | cdir_compile_omit | cdir_section | cdir_compile_end_tag;
@@ -125,7 +125,7 @@ namespace Irony.Samples {
       comma_expr_opt.Rule = Empty | comma + expr;
       cdir_section.Rule = ToTerm("SECTION") + "(" + string_lit + ")";
       compile_or_omit.Rule = ToTerm("COMPILE") | "OMIT";
-      
+
       //File structure
       main_file.Rule = "PROGRAM" + wspace + map + data_decl_list_opt + wspace +
                      "CODE" + wspace + stmt_list + return_line_opt + proc_impl_list;
@@ -137,7 +137,7 @@ namespace Irony.Samples {
       map_elem_list.Rule = MakeStarRule(map_elem_list, wspace, map_elem);
       map_elem.Rule = proc_decl | module_header;
       module_decl.Rule = module_header + proc_decl_list + end_line;
-      module_header.Rule = ToTerm("MODULE") + "(" + string_lit + ")" + wspace; 
+      module_header.Rule = ToTerm("MODULE") + "(" + string_lit + ")" + wspace;
 
       proc_decl_list.Rule = MakePlusRule(proc_decl_list, proc_decl);
       proc_decl.Rule = label + "PROCEDURE" + param_list_par_opt + attr_list_tail_opt + wspace;
@@ -145,17 +145,17 @@ namespace Irony.Samples {
       param_list.Rule = MakePlusRule(param_list, comma, param);
       param.Rule = data_type + identifier + param_init_opt;
       param_init_opt.Rule = Empty | "=" + number;
-      data_type.Rule = identifier + type_args_opt; 
+      data_type.Rule = identifier + type_args_opt;
       type_args_opt.Rule = Empty | "(" + type_arg_list + ")";
       type_arg_list.Rule = MakePlusRule(type_arg_list, comma, type_arg);
-      type_arg.Rule = number | identifier; 
-      
+      type_arg.Rule = number | identifier;
+
       attr_list_tail_opt.Rule = Empty | comma + attr_list;
-      attr_list.Rule = MakePlusRule(attr_list, comma, attr_def); 
+      attr_list.Rule = MakePlusRule(attr_list, comma, attr_def);
       attr_def.Rule = identifier + param_list_par_opt;
 
       data_decl_list.Rule = MakePlusRule(data_decl_list, data_decl);
-      data_decl_list_opt.Rule = data_decl_list | Empty; 
+      data_decl_list_opt.Rule = data_decl_list | Empty;
       data_decl.Rule = identifier + data_type + wspace;
 
       proc_impl_list.Rule = MakeStarRule(proc_impl_list, proc_impl);
@@ -181,10 +181,10 @@ namespace Irony.Samples {
       end_line.Rule = "END" + NewLine | "." + NewLine;
 
       //operator precedence 
-      RegisterOperators(10,  "OR", "XOR");
+      RegisterOperators(10, "OR", "XOR");
       RegisterOperators(20, "AND");
 
-      RegisterOperators(50, "=", "<", ">", "~=", "~<", "~>", "<>", "<=", "=<", ">=", "=>"); 
+      RegisterOperators(50, "=", "<", ">", "~=", "~<", "~>", "<>", "<=", "=<", ">=", "=>");
       RegisterOperators(100, "+", "-");
       RegisterOperators(110, "*", "/", "%", "&");
       RegisterOperators(120, Associativity.Right, "^");
@@ -194,41 +194,44 @@ namespace Irony.Samples {
       //punctuation, brace pairs, transient nodes
       MarkPunctuation("(", ")", ",");
       RegisterBracePair("(", ")");
-      
+
       //Reserved words and special words
       var resWordList = "ACCEPT AND BEGIN BREAK BY CASE CHOOSE COMPILE CYCLE DO ELSE ELSIF END EXECUTE EXIT FUNCTION GOTO IF INCLUDE LOOP" +
                         " MEMBER NEW NOT NULL OF OMIT OR OROF PARENT PROCEDURE PROGRAM RETURN ROUTINE SECTION SELF THEN TIMES TO UNTIL WHILE XOR";
       this.MarkReservedWords(resWordList.Split(' '));
-      var specialWordsList = "APPLICATION CLASS CODE DATA DETAIL FILE FOOTER FORM GROUP HEADER ITEM ITEMIZE JOIN MAP MENU MENUBAR" + 
+      var specialWordsList = "APPLICATION CLASS CODE DATA DETAIL FILE FOOTER FORM GROUP HEADER ITEM ITEMIZE JOIN MAP MENU MENUBAR" +
                          " MODULE OLECONTROL OPTION QUEUE RECORD REPORT ROW SHEET TAB TABLE TOOLBAR VIEW WINDOW";
       //Initialize special words list (words that cannot be used as proc names); we'll later use them for verifying proc names
       SpecialWords = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-      SpecialWords.UnionWith(specialWordsList.Split(' ')); 
+      SpecialWords.UnionWith(specialWordsList.Split(' '));
     }
-
 
     #region Parsing event handlers
 
-    Token Match_compile_end_tag(Terminal terminal, ParsingContext context, ISourceStream source) {
-      if (source.MatchSymbol("__End")) {
-        var p = source.Location.Position; 
-        var lineEnd = source.Text.IndexOf("\n", p); 
+    Token Match_compile_end_tag(Terminal terminal, ParsingContext context, ISourceStream source)
+    {
+      if (source.MatchSymbol("__End"))
+      {
+        var p = source.Location.Position;
+        var lineEnd = source.Text.IndexOf("\n", p);
         var text = source.Text.Substring(p, lineEnd - p + 1);
         return new Token(_comment, source.Location, text, text);
       }
       //otherwise return null
-      return null; 
+      return null;
     }
 
     //All numbers are treated as HEX initially; here we need to analyze suffix (if any) and convert the value
-    void number_ValidateToken(object sender, ValidateTokenEventArgs e) {
-      
+    void number_ValidateToken(object sender, ValidateTokenEventArgs e)
+    {
+
     }
 
-    void label_ValidateToken(object sender, ValidateTokenEventArgs e) {
+    void label_ValidateToken(object sender, ValidateTokenEventArgs e)
+    {
       //check that token starts at position 0
       if (e.Token.Location.Column > 0) //Column is 0-based
-        e.RejectToken(); 
+        e.RejectToken();
     }//constructor
     #endregion
 

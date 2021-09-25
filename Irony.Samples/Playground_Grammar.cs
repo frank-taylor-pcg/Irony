@@ -1,21 +1,18 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
-using Irony.Parsing;
-using System.Globalization;
-using Irony.Interpreter;
-using Irony.Interpreter.Ast;
+﻿using Irony.Parsing;
+using System;
 
-namespace Irony.Samples.TestBed {
+namespace Irony.Samples.TestBed
+{
   [Language("QueryLanguage", "1.0", "A Query Language based on JET where clauses")]
-  public class QueryGrammar : Grammar {
+  public class QueryGrammar : Grammar
+  {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueryGrammar"/> class.
     /// </summary>
     public QueryGrammar()
-      : base(false) { // true means case sensitive
+      : base(false)
+    { // true means case sensitive
       GrammarComments = @"A Query Language based on JET where clauses. Case-insensitive.";
 
       // Terminals (Lexing)

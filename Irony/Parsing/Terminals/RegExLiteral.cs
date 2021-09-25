@@ -13,10 +13,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
   // Regular expression literal, like javascript literal:   /abc?/i
   // Allows optional switches
   // example:
@@ -26,52 +26,60 @@ namespace Irony.Parsing {
   // (this is the job of regex engine), we only need to correctly recognize the end of expression
 
   [Flags]
-  public enum RegexTermOptions {
-    None = 0, 
+  public enum RegexTermOptions
+  {
+    None = 0,
     AllowLetterAfter = 0x01, //if not set (default) then any following letter (after legal switches) is reported as invalid switch
     CreateRegExObject = 0x02,  //if set, token.Value contains Regex object; otherwise, it contains a pattern (string)
     UniqueSwitches = 0x04,    //require unique switches
-    
+
     Default = CreateRegExObject | UniqueSwitches,
   }
 
-  public class RegexLiteral : Terminal {
+  public class RegexLiteral : Terminal
+  {
     public class RegexSwitchTable : Dictionary<char, RegexOptions> { }
-    
+
     public Char StartSymbol = '/';
-    public Char EndSymbol='/';
-    public Char EscapeSymbol='\\';
+    public Char EndSymbol = '/';
+    public Char EscapeSymbol = '\\';
     public RegexSwitchTable Switches = new RegexSwitchTable();
     public RegexOptions DefaultOptions = RegexOptions.None;
     public RegexTermOptions Options = RegexTermOptions.Default;
 
-    private char[] _stopChars; 
+    private char[] _stopChars;
 
-    public RegexLiteral(string name) : base(name) {
+    public RegexLiteral(string name) : base(name)
+    {
       Switches.Add('i', RegexOptions.IgnoreCase);
       Switches.Add('g', RegexOptions.None); //not sure what to do with this flag? anybody, any advice?
       Switches.Add('m', RegexOptions.Multiline);
       base.SetFlag(TermFlags.IsLiteral);
     }
 
-    public RegexLiteral(string name, char startEndSymbol, char escapeSymbol) : base(name) {
+    public RegexLiteral(string name, char startEndSymbol, char escapeSymbol) : base(name)
+    {
       StartSymbol = startEndSymbol;
       EndSymbol = startEndSymbol;
       EscapeSymbol = escapeSymbol;
     }//constructor
 
-    public override void Init(GrammarData grammarData) {
+    public override void Init(GrammarData grammarData)
+    {
       base.Init(grammarData);
       _stopChars = new char[] { EndSymbol, '\r', '\n' };
     }
-    public override IList<string> GetFirsts() {
+    public override IList<string> GetFirsts()
+    {
       var result = new StringList();
       result.Add(StartSymbol.ToString());
-      return result; 
+      return result;
     }
 
-    public override Token TryMatch(ParsingContext context, ISourceStream source) {
-      while (true) {
+    public override Token TryMatch(ParsingContext context, ISourceStream source)
+    {
+      while (true)
+      {
         //Find next position
         var newPos = source.Text.IndexOfAny(_stopChars, source.PreviewPosition + 1);
         //we either didn't find it
@@ -80,8 +88,8 @@ namespace Irony.Parsing {
         source.PreviewPosition = newPos;
         if (source.PreviewChar != EndSymbol)
           //we hit CR or LF, this is an error
-          return context.CreateErrorToken(Resources.ErrNoEndForRegex); 
-        if (!CheckEscaped(source)) 
+          return context.CreateErrorToken(Resources.ErrNoEndForRegex);
+        if (!CheckEscaped(source))
           break;
       }
       source.PreviewPosition++; //move after end symbol
@@ -90,14 +98,16 @@ namespace Irony.Parsing {
       //read switches and turn them into options
       RegexOptions options = RegexOptions.None;
       var switches = string.Empty;
-      while(ReadSwitch(source, ref options)) {
+      while (ReadSwitch(source, ref options))
+      {
         if (IsSet(RegexTermOptions.UniqueSwitches) && switches.Contains(source.PreviewChar))
           return context.CreateErrorToken(Resources.ErrDupRegexSwitch, source.PreviewChar); // "Duplicate switch '{0}' for regular expression" 
         switches += source.PreviewChar.ToString();
-        source.PreviewPosition++; 
+        source.PreviewPosition++;
       }
       //check following symbol
-      if (!IsSet(RegexTermOptions.AllowLetterAfter)) {
+      if (!IsSet(RegexTermOptions.AllowLetterAfter))
+      {
         var currChar = source.PreviewChar;
         if (char.IsLetter(currChar) || currChar == '_')
           return context.CreateErrorToken(Resources.ErrInvRegexSwitch, currChar); // "Invalid switch '{0}' for regular expression"  
@@ -105,35 +115,40 @@ namespace Irony.Parsing {
       var token = source.CreateToken(this.OutputTerminal);
       //we have token, now what's left is to set its Value field. It is either pattern itself, or Regex instance
       string pattern = token.Text.Substring(1, patternLen); //exclude start and end symbol
-      object value = pattern; 
-      if (IsSet(RegexTermOptions.CreateRegExObject)) {
+      object value = pattern;
+      if (IsSet(RegexTermOptions.CreateRegExObject))
+      {
         value = new Regex(pattern, options);
       }
-      token.Value = value; 
+      token.Value = value;
       token.Details = switches; //save switches in token.Details
-      return token; 
+      return token;
     }
 
-    private bool CheckEscaped(ISourceStream source) {
+    private bool CheckEscaped(ISourceStream source)
+    {
       var savePos = source.PreviewPosition;
       bool escaped = false;
-      source.PreviewPosition--; 
-      while (source.PreviewChar == EscapeSymbol){
+      source.PreviewPosition--;
+      while (source.PreviewChar == EscapeSymbol)
+      {
         escaped = !escaped;
         source.PreviewPosition--;
       }
       source.PreviewPosition = savePos;
       return escaped;
     }
-    private bool ReadSwitch(ISourceStream source, ref RegexOptions options) {
+    private bool ReadSwitch(ISourceStream source, ref RegexOptions options)
+    {
       RegexOptions option;
       var result = Switches.TryGetValue(source.PreviewChar, out option);
       if (result)
         options |= option;
-      return result; 
+      return result;
     }
 
-    public bool IsSet(RegexTermOptions option) {
+    public bool IsSet(RegexTermOptions option)
+    {
       return (Options & option) != 0;
     }
 

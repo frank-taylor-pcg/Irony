@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
-
+namespace Irony.Parsing
+{
   [Flags]
-  public enum LanguageFlags {
+  public enum LanguageFlags
+  {
     None = 0,
 
     //Compilation options
@@ -30,7 +28,8 @@ namespace Irony.Parsing {
   }
 
   //Operator associativity types
-  public enum Associativity {
+  public enum Associativity
+  {
     Left,
     Right,
     Neutral  //honestly don't know what that means, but it is mentioned in literature 
@@ -38,7 +37,8 @@ namespace Irony.Parsing {
 
   //Used by Make-list-rule methods
   [Flags]
-  public enum TermListOptions {
+  public enum TermListOptions
+  {
     None = 0,
     AllowEmpty = 0x01,
     AllowTrailingDelimiter = 0x02,
@@ -51,5 +51,4 @@ namespace Irony.Parsing {
     PlusList = AddPreferShiftHint,
     StarList = AllowEmpty | AddPreferShiftHint,
   }
-
 }

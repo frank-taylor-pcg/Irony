@@ -10,23 +10,22 @@
  * **********************************************************************************/
 #endregion
 
+using Irony.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Numerics;
-using System.Diagnostics;
-using Irony.Parsing;
 
-namespace Irony.Interpreter { 
-
+namespace Irony.Interpreter
+{
   //Initialization of Runtime
-  public partial class LanguageRuntime {
-    private static ExpressionType[] _overflowOperators = new ExpressionType[] { 
-       ExpressionType.Add, ExpressionType.AddChecked, ExpressionType.Subtract, ExpressionType.SubtractChecked, 
+  public partial class LanguageRuntime
+  {
+    private static ExpressionType[] _overflowOperators = new ExpressionType[] {
+       ExpressionType.Add, ExpressionType.AddChecked, ExpressionType.Subtract, ExpressionType.SubtractChecked,
        ExpressionType.Multiply, ExpressionType.MultiplyChecked, ExpressionType.Power};
-    
+
     // Smart boxing: boxes for a bunch of integers are preallocated
     private object[] _boxes = new object[4096];
     private const int _boxesMiddle = 2048;
@@ -38,7 +37,8 @@ namespace Irony.Interpreter {
     bool _supportsRational;
 
 
-    protected virtual void InitOperatorImplementations() {
+    protected virtual void InitOperatorImplementations()
+    {
       _supportsComplex = this.Language.Grammar.LanguageFlags.IsSet(LanguageFlags.SupportsComplex);
       _supportsBigInt = this.Language.Grammar.LanguageFlags.IsSet(LanguageFlags.SupportsBigInt);
       _supportsRational = this.Language.Grammar.LanguageFlags.IsSet(LanguageFlags.SupportsRational);
@@ -53,44 +53,50 @@ namespace Irony.Interpreter {
     }
 
     //The value of smart boxing is questionable - so far did not see perf improvements, so currently it is disabled
-    private void InitBoxes() {
+    private void InitBoxes()
+    {
       for (int i = 0; i < _boxes.Length; i++)
         _boxes[i] = i - _boxesMiddle;
     }
 
     #region Utility methods for adding converters and binary implementations
-    protected OperatorImplementation AddConverter(Type fromType, Type toType, UnaryOperatorMethod method) {
+    protected OperatorImplementation AddConverter(Type fromType, Type toType, UnaryOperatorMethod method)
+    {
       var key = new OperatorDispatchKey(ExpressionType.ConvertChecked, fromType, toType);
       var impl = new OperatorImplementation(key, toType, method);
       OperatorImplementations[key] = impl;
       return impl;
     }
 
-    protected OperatorImplementation AddBinaryBoxed(ExpressionType op, Type baseType, 
-         BinaryOperatorMethod boxedBinaryMethod, BinaryOperatorMethod noBoxMethod) {
+    protected OperatorImplementation AddBinaryBoxed(ExpressionType op, Type baseType,
+         BinaryOperatorMethod boxedBinaryMethod, BinaryOperatorMethod noBoxMethod)
+    {
       // first create implementation without boxing
       var noBoxImpl = AddBinary(op, baseType, noBoxMethod);
       if (!SmartBoxingEnabled)
-        return noBoxImpl; 
+        return noBoxImpl;
       //The boxedImpl will overwrite noBoxImpl in the dictionary
       var boxedImpl = AddBinary(op, baseType, boxedBinaryMethod);
       boxedImpl.NoBoxImplementation = noBoxImpl;
       return boxedImpl;
     }
 
-    protected OperatorImplementation AddBinary(ExpressionType op, Type baseType, BinaryOperatorMethod binaryMethod) {
+    protected OperatorImplementation AddBinary(ExpressionType op, Type baseType, BinaryOperatorMethod binaryMethod)
+    {
       return AddBinary(op, baseType, binaryMethod, null);
     }
 
-    protected OperatorImplementation AddBinary(ExpressionType op, Type commonType, 
-                     BinaryOperatorMethod binaryMethod, UnaryOperatorMethod resultConverter) {
+    protected OperatorImplementation AddBinary(ExpressionType op, Type commonType,
+                     BinaryOperatorMethod binaryMethod, UnaryOperatorMethod resultConverter)
+    {
       var key = new OperatorDispatchKey(op, commonType, commonType);
       var impl = new OperatorImplementation(key, commonType, binaryMethod, null, null, resultConverter);
       OperatorImplementations[key] = impl;
       return impl;
     }
 
-    protected OperatorImplementation AddUnary(ExpressionType op, Type commonType, UnaryOperatorMethod unaryMethod) {
+    protected OperatorImplementation AddUnary(ExpressionType op, Type commonType, UnaryOperatorMethod unaryMethod)
+    {
       var key = new OperatorDispatchKey(op, commonType);
       var impl = new OperatorImplementation(key, commonType, null, unaryMethod, null, null);
       OperatorImplementations[key] = impl;
@@ -100,8 +106,9 @@ namespace Irony.Interpreter {
     #endregion
 
     #region Initializing type converters
-    public virtual void InitTypeConverters() {
-      Type targetType; 
+    public virtual void InitTypeConverters()
+    {
+      Type targetType;
 
       //->string
       targetType = typeof(string);
@@ -121,7 +128,8 @@ namespace Irony.Interpreter {
         AddConverter(typeof(Complex), targetType, ConvertAnyToString);
 
       //->Complex
-      if (_supportsComplex) {
+      if (_supportsComplex)
+      {
         targetType = typeof(Complex);
         AddConverter(typeof(sbyte), targetType, ConvertAnyToComplex);
         AddConverter(typeof(byte), targetType, ConvertAnyToComplex);
@@ -132,11 +140,12 @@ namespace Irony.Interpreter {
         AddConverter(typeof(Int64), targetType, ConvertAnyToComplex);
         AddConverter(typeof(UInt64), targetType, ConvertAnyToComplex);
         AddConverter(typeof(Single), targetType, ConvertAnyToComplex);
-        if (_supportsBigInt) 
+        if (_supportsBigInt)
           AddConverter(typeof(BigInteger), targetType, ConvertBigIntToComplex);
       }
       //->BigInteger
-      if (_supportsBigInt) {
+      if (_supportsBigInt)
+      {
         targetType = typeof(BigInteger);
         AddConverter(typeof(sbyte), targetType, ConvertAnyIntToBigInteger);
         AddConverter(typeof(byte), targetType, ConvertAnyIntToBigInteger);
@@ -147,7 +156,7 @@ namespace Irony.Interpreter {
         AddConverter(typeof(Int64), targetType, ConvertAnyIntToBigInteger);
         AddConverter(typeof(UInt64), targetType, ConvertAnyIntToBigInteger);
       }
- 
+
       //->Double
       targetType = typeof(double);
       AddConverter(typeof(sbyte), targetType, value => (double)(sbyte)value);
@@ -160,7 +169,7 @@ namespace Irony.Interpreter {
       AddConverter(typeof(UInt64), targetType, value => (double)(UInt64)value);
       AddConverter(typeof(Single), targetType, value => (double)(Single)value);
       if (_supportsBigInt)
-        AddConverter(typeof(BigInteger), targetType, value => ((double) (BigInteger)value));
+        AddConverter(typeof(BigInteger), targetType, value => ((double)(BigInteger)value));
 
       //->Single
       targetType = typeof(Single);
@@ -174,7 +183,7 @@ namespace Irony.Interpreter {
       AddConverter(typeof(UInt64), targetType, value => (Single)(UInt64)value);
       if (_supportsBigInt)
         AddConverter(typeof(BigInteger), targetType, value => (Single)(BigInteger)value);
-      
+
       //->UInt64
       targetType = typeof(UInt64);
       AddConverter(typeof(sbyte), targetType, value => (UInt64)(sbyte)value);
@@ -193,7 +202,7 @@ namespace Irony.Interpreter {
       AddConverter(typeof(UInt16), targetType, value => (Int64)(UInt16)value);
       AddConverter(typeof(Int32), targetType, value => (Int64)(Int32)value);
       AddConverter(typeof(UInt32), targetType, value => (Int64)(UInt32)value);
-      
+
       //->UInt32
       targetType = typeof(UInt32);
       AddConverter(typeof(sbyte), targetType, value => (UInt32)(sbyte)value);
@@ -226,20 +235,24 @@ namespace Irony.Interpreter {
     }
 
     // Some specialized convert implementation methods
-    public static object ConvertAnyToString(object value) {
+    public static object ConvertAnyToString(object value)
+    {
       return value == null ? string.Empty : value.ToString();
     }
 
-    public static object ConvertBigIntToComplex(object value) {
+    public static object ConvertBigIntToComplex(object value)
+    {
       BigInteger bi = (BigInteger)value;
-      return new Complex((double) bi, 0);
+      return new Complex((double)bi, 0);
     }
 
-    public static object ConvertAnyToComplex(object value) {
+    public static object ConvertAnyToComplex(object value)
+    {
       double d = Convert.ToDouble(value);
       return new Complex(d, 0);
     }
-    public static object ConvertAnyIntToBigInteger(object value) {
+    public static object ConvertAnyIntToBigInteger(object value)
+    {
       long l = Convert.ToInt64(value);
       return new BigInteger(l);
     }
@@ -247,7 +260,8 @@ namespace Irony.Interpreter {
 
     #region Binary operators implementations
     // Generates of binary implementations for matched argument types
-    public virtual void InitBinaryOperatorImplementationsForMatchedTypes() {
+    public virtual void InitBinaryOperatorImplementationsForMatchedTypes()
+    {
 
       // For each operator, we add a series of implementation methods for same-type operands. They are saved as OperatorImplementation
       // records in OperatorImplementations table. This happens at initialization time. 
@@ -259,7 +273,7 @@ namespace Irony.Interpreter {
       ExpressionType op;
 
       op = ExpressionType.AddChecked;
-      AddBinaryBoxed(op, typeof(Int32), (x, y) => _boxes[checked((Int32)x + (Int32)y) + _boxesMiddle], 
+      AddBinaryBoxed(op, typeof(Int32), (x, y) => _boxes[checked((Int32)x + (Int32)y) + _boxesMiddle],
                                          (x, y) => checked((Int32)x + (Int32)y));
       AddBinary(op, typeof(UInt32), (x, y) => checked((UInt32)x + (UInt32)y));
       AddBinary(op, typeof(Int64), (x, y) => checked((Int64)x + (Int64)y));
@@ -309,7 +323,7 @@ namespace Irony.Interpreter {
       AddBinary(op, typeof(UInt64), (x, y) => checked((UInt64)x / (UInt64)y));
       AddBinary(op, typeof(Single), (x, y) => (Single)x / (Single)y);
       AddBinary(op, typeof(double), (x, y) => (double)x / (double)y);
-      AddBinary(op, typeof(decimal), (x, y) =>(decimal)x / (decimal)y);
+      AddBinary(op, typeof(decimal), (x, y) => (decimal)x / (decimal)y);
       if (_supportsBigInt)
         AddBinary(op, typeof(BigInteger), (x, y) => (BigInteger)x / (BigInteger)y);
       if (_supportsComplex)
@@ -349,7 +363,7 @@ namespace Irony.Interpreter {
       AddBinary(op, typeof(Int64), (x, y) => (Int64)x | (Int64)y);
       AddBinary(op, typeof(UInt64), (x, y) => (UInt64)x | (UInt64)y);
 
-      op = ExpressionType.ExclusiveOr; 
+      op = ExpressionType.ExclusiveOr;
       AddBinary(op, typeof(bool), (x, y) => (bool)x ^ (bool)y);
       AddBinary(op, typeof(sbyte), (x, y) => (sbyte)x ^ (sbyte)y);
       AddBinary(op, typeof(byte), (x, y) => (byte)x ^ (byte)y);
@@ -428,7 +442,8 @@ namespace Irony.Interpreter {
 
     }//method
 
-    public virtual void InitUnaryOperatorImplementations() {
+    public virtual void InitUnaryOperatorImplementations()
+    {
       var op = ExpressionType.UnaryPlus;
       AddUnary(op, typeof(sbyte), x => +(sbyte)x);
       AddUnary(op, typeof(byte), x => +(byte)x);
@@ -473,14 +488,16 @@ namespace Irony.Interpreter {
     }
 
     // Generates binary implementations for mismatched argument types
-    public virtual void CreateBinaryOperatorImplementationsForMismatchedTypes() {
+    public virtual void CreateBinaryOperatorImplementationsForMismatchedTypes()
+    {
       // find all data types are there
       var allTypes = new HashSet<Type>();
       var allBinOps = new HashSet<ExpressionType>();
-      foreach (var kv in OperatorImplementations) {
+      foreach (var kv in OperatorImplementations)
+      {
         allTypes.Add(kv.Key.Arg1Type);
         if (kv.Value.BaseBinaryMethod != null)
-          allBinOps.Add(kv.Key.Op);      
+          allBinOps.Add(kv.Key.Op);
       }
       foreach (var arg1Type in allTypes)
         foreach (var arg2Type in allTypes)
@@ -492,41 +509,46 @@ namespace Irony.Interpreter {
     // Creates a binary implementations for an operator with mismatched argument types.
     // Determines common type, retrieves implementation for operator with both args of common type, then creates
     // implementation for mismatched types using type converters (by converting to common type)
-    public OperatorImplementation CreateBinaryOperatorImplementation(ExpressionType op, Type arg1Type, Type arg2Type) {
+    public OperatorImplementation CreateBinaryOperatorImplementation(ExpressionType op, Type arg1Type, Type arg2Type)
+    {
       Type commonType = GetCommonTypeForOperator(op, arg1Type, arg2Type);
       if (commonType == null)
         return null;
       //Get base method for the operator and common type 
       var baseImpl = FindBaseImplementation(op, commonType);
-      if (baseImpl == null) { //Try up-type
+      if (baseImpl == null)
+      { //Try up-type
         commonType = GetUpType(commonType);
         if (commonType == null)
-          return null; 
+          return null;
         baseImpl = FindBaseImplementation(op, commonType);
       }
       if (baseImpl == null)
-        return null; 
+        return null;
       //Create implementation and save it in implementations table
       var impl = CreateBinaryOperatorImplementation(op, arg1Type, arg2Type, commonType, baseImpl.BaseBinaryMethod, baseImpl.ResultConverter);
       OperatorImplementations[impl.Key] = impl;
       return impl;
     }
 
-    protected virtual OperatorImplementation CreateBinaryOperatorImplementation(ExpressionType op, Type arg1Type, Type arg2Type, 
-                   Type commonType, BinaryOperatorMethod method, UnaryOperatorMethod resultConverter) {
+    protected virtual OperatorImplementation CreateBinaryOperatorImplementation(ExpressionType op, Type arg1Type, Type arg2Type,
+                   Type commonType, BinaryOperatorMethod method, UnaryOperatorMethod resultConverter)
+    {
       OperatorDispatchKey key = new OperatorDispatchKey(op, arg1Type, arg2Type);
       UnaryOperatorMethod arg1Converter = arg1Type == commonType ? null : GetConverter(arg1Type, commonType);
       UnaryOperatorMethod arg2Converter = arg2Type == commonType ? null : GetConverter(arg2Type, commonType);
       var impl = new OperatorImplementation(
         key, commonType, method, arg1Converter, arg2Converter, resultConverter);
-      return impl; 
+      return impl;
     }
 
     // Creates overflow handlers. For each implementation, checks if operator can overflow; 
     // if yes, creates and sets an overflow handler - another implementation that performs
     // operation using "upper" type that wouldn't overflow. For ex: (int * int) has overflow handler (int64 * int64) 
-    protected virtual void CreateOverflowHandlers() {
-      foreach (var impl in OperatorImplementations.Values) {
+    protected virtual void CreateOverflowHandlers()
+    {
+      foreach (var impl in OperatorImplementations.Values)
+      {
         if (!CanOverflow(impl))
           continue;
         var key = impl.Key;
@@ -542,7 +564,8 @@ namespace Irony.Interpreter {
       }
     }
 
-    private OperatorImplementation FindBaseImplementation(ExpressionType op, Type commonType) {
+    private OperatorImplementation FindBaseImplementation(ExpressionType op, Type commonType)
+    {
       var baseKey = new OperatorDispatchKey(op, commonType, commonType);
       OperatorImplementation baseImpl;
       OperatorImplementations.TryGetValue(baseKey, out baseImpl);
@@ -550,7 +573,8 @@ namespace Irony.Interpreter {
     }
 
     // Important: returns null if fromType == toType
-    public virtual UnaryOperatorMethod GetConverter(Type fromType, Type toType) {
+    public virtual UnaryOperatorMethod GetConverter(Type fromType, Type toType)
+    {
       if (fromType == toType)
         return (x => x);
       var key = new OperatorDispatchKey(ExpressionType.ConvertChecked, fromType, toType);
@@ -563,7 +587,8 @@ namespace Irony.Interpreter {
 
     #region Utilities
 
-    private static bool CanOverflow(OperatorImplementation impl) {
+    private static bool CanOverflow(OperatorImplementation impl)
+    {
       if (!CanOverflow(impl.Key.Op))
         return false;
       if (impl.CommonType == typeof(Int32) && IsSmallInt(impl.Key.Arg1Type) && IsSmallInt(impl.Key.Arg2Type))
@@ -575,12 +600,14 @@ namespace Irony.Interpreter {
       return true;
     }
 
-    private static bool CanOverflow(ExpressionType expression) {
+    private static bool CanOverflow(ExpressionType expression)
+    {
       return _overflowOperators.Contains(expression);
     }
 
 
-    private static bool IsSmallInt(Type type) {
+    private static bool IsSmallInt(Type type)
+    {
       return type == typeof(byte) || type == typeof(sbyte) || type == typeof(Int16) || type == typeof(UInt16);
     }
 
@@ -592,14 +619,15 @@ namespace Irony.Interpreter {
     /// <param name="argType1">The type of the first argument.</param>
     /// <param name="argType2">The type of the second argument</param>
     /// <returns>A common type for operation.</returns>
-    protected virtual Type GetCommonTypeForOperator(ExpressionType op, Type argType1, Type argType2) {
+    protected virtual Type GetCommonTypeForOperator(ExpressionType op, Type argType1, Type argType2)
+    {
       if (argType1 == argType2)
         return argType1;
 
       //TODO: see how to handle properly null/NoneValue in expressions
       // var noneType = typeof(NoneClass);
       // if (argType1 == noneType || argType2 == noneType) return noneType; 
-      
+
       // Check for unsigned types and convert to signed versions
       var t1 = GetSignedTypeForUnsigned(argType1);
       var t2 = GetSignedTypeForUnsigned(argType2);
@@ -613,8 +641,9 @@ namespace Irony.Interpreter {
     }//method
 
     // If a type is one of "unsigned" int types, returns next bigger signed type
-    protected virtual Type GetSignedTypeForUnsigned(Type type) {
-      if (!_unsignedTypes.Contains(type))  return type;
+    protected virtual Type GetSignedTypeForUnsigned(Type type)
+    {
+      if (!_unsignedTypes.Contains(type)) return type;
       if (type == typeof(byte) || type == typeof(UInt16)) return typeof(int);
       if (type == typeof(UInt32)) return typeof(Int64);
       if (type == typeof(UInt64)) return typeof(Int64); //let's remain in Int64
@@ -629,17 +658,18 @@ namespace Irony.Interpreter {
     /// <remarks>
     /// Can be overwritten in language implementation to implement different type-conversion policy.
     /// </remarks>
-    protected virtual Type GetUpType(Type type) {
+    protected virtual Type GetUpType(Type type)
+    {
       // In fact we do not need to care about unsigned types - they are eliminated from common types for operations,
       //  so "type" parameter can never be unsigned type. But just in case...
       if (_unsignedTypes.Contains(type))
         return GetSignedTypeForUnsigned(type); //it will return "upped" type in fact
-      if (type == typeof(byte) || type == typeof(sbyte) || type == typeof(UInt16) || type == typeof(Int16)) 
+      if (type == typeof(byte) || type == typeof(sbyte) || type == typeof(UInt16) || type == typeof(Int16))
         return typeof(int);
-      if (type == typeof(Int32)) 
+      if (type == typeof(Int32))
         return typeof(Int64);
-      if (type == typeof(Int64)) 
-          return typeof(BigInteger);
+      if (type == typeof(Int64))
+        return typeof(BigInteger);
       return null;
     }
 
@@ -655,5 +685,4 @@ namespace Irony.Interpreter {
     #endregion
 
   }//class
-
 }//namespace

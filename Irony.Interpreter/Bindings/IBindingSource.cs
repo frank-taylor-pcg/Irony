@@ -12,24 +12,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
 
-  public interface IBindingSource {
+  public interface IBindingSource
+  {
     Binding Bind(BindingRequest request);
   }
 
-  public class BindingSourceList : List<IBindingSource> {
+  public class BindingSourceList : List<IBindingSource>
+  {
   }
 
-  public class BindingSourceTable : Dictionary<string, IBindingSource>, IBindingSource {
+  public class BindingSourceTable : Dictionary<string, IBindingSource>, IBindingSource
+  {
     public BindingSourceTable(bool caseSensitive)
-      : base(caseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase) {
+      : base(caseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase)
+    {
     }
     //IBindingSource Members
-    public Binding Bind(BindingRequest request) {
+    public Binding Bind(BindingRequest request)
+    {
       IBindingSource target;
       if (TryGetValue(request.Symbol, out target))
         return target.Bind(request);
@@ -38,7 +42,8 @@ namespace Irony.Interpreter {
   }//class
 
   // This class will be used to define extensions for BindingSourceTable
-  public static partial class BindingSourceTableExtensions {
+  public static partial class BindingSourceTableExtensions
+  {
   }
 
 }

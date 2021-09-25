@@ -11,21 +11,22 @@
 // This file and all functionality of dynamic assembly reloading was contributed by Alexey Yakovlev (yallie)
 #endregion
 
+using Irony.Parsing;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
-using Irony.Parsing;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace Irony.GrammarExplorer {
+namespace Irony.GrammarExplorer
+{
   /// <summary>
   /// Maintains grammar assemblies, reloads updated files automatically.
   /// </summary>
-  class GrammarLoader {
+  class GrammarLoader
+  {
     private TimeSpan _autoRefreshDelay = TimeSpan.FromMilliseconds(1000);
     private static HashSet<string> _probingPaths = new HashSet<string>();
     private Dictionary<string, CachedAssembly> _cachedGrammarAssemblies = new Dictionary<string, CachedAssembly>();
@@ -33,12 +34,14 @@ namespace Irony.GrammarExplorer {
     private static HashSet<Assembly> _loadedAssemblies = new HashSet<Assembly>();
     private static bool _enableBrowsingForAssemblyResolution = false;
 
-    static GrammarLoader() {
+    static GrammarLoader()
+    {
       AppDomain.CurrentDomain.AssemblyLoad += (sender, args) => _loadedAssembliesByNames[args.LoadedAssembly.FullName] = args.LoadedAssembly;
       AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => FindAssembly(args.Name);
     }
 
-    static Assembly FindAssembly(string assemblyName) {
+    static Assembly FindAssembly(string assemblyName)
+    {
       if (_loadedAssembliesByNames.ContainsKey(assemblyName))
         return _loadedAssembliesByNames[assemblyName];
       // ignore resource assemblies
@@ -46,19 +49,24 @@ namespace Irony.GrammarExplorer {
         return _loadedAssembliesByNames[assemblyName] = null;
       // use probing paths to look for dependency assemblies
       var fileName = assemblyName.Split(',').First() + ".dll";
-      foreach (var path in _probingPaths) {
+      foreach (var path in _probingPaths)
+      {
         var fullName = Path.Combine(path, fileName);
-        if (File.Exists(fullName)) {
-          try {
+        if (File.Exists(fullName))
+        {
+          try
+          {
             return LoadAssembly(fullName);
           }
-          catch {
+          catch
+          {
             // the file seems to be bad, let's try to find another one
           }
         }
       }
       // the last chance: try asking user to locate the assembly
-      if (_enableBrowsingForAssemblyResolution) {
+      if (_enableBrowsingForAssemblyResolution)
+      {
         fileName = BrowseFor(assemblyName);
         if (!string.IsNullOrWhiteSpace(fileName))
           return LoadAssembly(fileName);
@@ -67,19 +75,23 @@ namespace Irony.GrammarExplorer {
       return _loadedAssembliesByNames[assemblyName] = null;
     }
 
-    static string BrowseFor(string assemblyName) {
-      var fileDialog = new OpenFileDialog {
+    static string BrowseFor(string assemblyName)
+    {
+      var fileDialog = new OpenFileDialog
+      {
         Title = "Please locate assembly: " + assemblyName,
         Filter = "Assemblies (*.dll)|*.dll|All files (*.*)|*.*"
       };
-      using (fileDialog) {
+      using (fileDialog)
+      {
         if (fileDialog.ShowDialog() == DialogResult.OK)
           return fileDialog.FileName;
       }
       return null;
     }
 
-    class CachedAssembly {
+    class CachedAssembly
+    {
       public long FileSize;
       public DateTime LastWriteTime;
       public FileSystemWatcher Watcher;
@@ -91,32 +103,39 @@ namespace Irony.GrammarExplorer {
 
     public GrammarItem SelectedGrammar { get; set; }
 
-    public Grammar CreateGrammar() {
+    public Grammar CreateGrammar()
+    {
       if (SelectedGrammar == null)
         return null;
 
       // resolve dependencies while loading and creating grammars
       _enableBrowsingForAssemblyResolution = true;
-      try {
+      try
+      {
         var type = SelectedGrammarAssembly.GetType(SelectedGrammar.TypeName, true, true);
         return Activator.CreateInstance(type) as Grammar;
       }
-      finally {
+      finally
+      {
         _enableBrowsingForAssemblyResolution = false;
       }
     }
 
-    Assembly SelectedGrammarAssembly {
-      get {
+    Assembly SelectedGrammarAssembly
+    {
+      get
+      {
         if (SelectedGrammar == null)
           return null;
 
         // create assembly cache entry as needed
         var location = SelectedGrammar.Location;
-        if (!_cachedGrammarAssemblies.ContainsKey(location)) {
+        if (!_cachedGrammarAssemblies.ContainsKey(location))
+        {
           var fileInfo = new FileInfo(location);
           _cachedGrammarAssemblies[location] =
-            new CachedAssembly {
+            new CachedAssembly
+            {
               LastWriteTime = fileInfo.LastWriteTime,
               FileSize = fileInfo.Length,
               Assembly = null
@@ -128,7 +147,8 @@ namespace Irony.GrammarExplorer {
 
         // get loaded assembly from cache if possible
         var assembly = _cachedGrammarAssemblies[location].Assembly;
-        if (assembly == null) {
+        if (assembly == null)
+        {
           assembly = LoadAssembly(location);
           _cachedGrammarAssemblies[location].Assembly = assembly;
         }
@@ -137,16 +157,19 @@ namespace Irony.GrammarExplorer {
       }
     }
 
-    private FileSystemWatcher CreateFileWatcher(string location) {
+    private FileSystemWatcher CreateFileWatcher(string location)
+    {
       var folder = Path.GetDirectoryName(location);
       var watcher = new FileSystemWatcher(folder);
       watcher.Filter = Path.GetFileName(location);
 
-      watcher.Changed += (s, args) => {
+      watcher.Changed += (s, args) =>
+      {
         if (args.ChangeType != WatcherChangeTypes.Changed)
           return;
 
-        lock (this) {
+        lock (this)
+        {
           // check if assembly file was changed indeed since the last event
           var cacheEntry = _cachedGrammarAssemblies[location];
           var fileInfo = new FileInfo(location);
@@ -159,10 +182,12 @@ namespace Irony.GrammarExplorer {
           cacheEntry.Assembly = null;
 
           // check if file update is already scheduled (work around multiple FileSystemWatcher event firing)
-          if (!cacheEntry.UpdateScheduled) {
+          if (!cacheEntry.UpdateScheduled)
+          {
             cacheEntry.UpdateScheduled = true;
             // delay auto-refresh to make sure the file is closed by the writer
-            ThreadPool.QueueUserWorkItem(_ => {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
               Thread.Sleep(_autoRefreshDelay);
               cacheEntry.UpdateScheduled = false;
               OnAssemblyUpdated(location);
@@ -175,13 +200,15 @@ namespace Irony.GrammarExplorer {
       return watcher;
     }
 
-    private void OnAssemblyUpdated(string location) {
+    private void OnAssemblyUpdated(string location)
+    {
       if (AssemblyUpdated == null || SelectedGrammar == null || SelectedGrammar.Location != location)
         return;
       AssemblyUpdated(this, EventArgs.Empty);
     }
 
-    public static Assembly LoadAssembly(string fileName) {
+    public static Assembly LoadAssembly(string fileName)
+    {
       // normalize the filename
       fileName = new FileInfo(fileName).FullName;
       // save assembly path for dependent assemblies probing
@@ -190,8 +217,9 @@ namespace Irony.GrammarExplorer {
       // try to load assembly using the standard policy
       var assembly = Assembly.LoadFrom(fileName);
       // if the standard policy returned the old version, force reload
-      if (_loadedAssemblies.Contains(assembly)) {
-          assembly = Assembly.Load(File.ReadAllBytes(fileName));
+      if (_loadedAssemblies.Contains(assembly))
+      {
+        assembly = Assembly.Load(File.ReadAllBytes(fileName));
       }
       // cache the loaded assembly by its location
       _loadedAssemblies.Add(assembly);

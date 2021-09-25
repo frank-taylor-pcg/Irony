@@ -10,38 +10,36 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-
-using Irony.Ast; 
+using Irony.Ast;
 using Irony.Parsing;
+using System.Linq.Expressions;
 
-namespace Irony.Interpreter.Ast {
-
-  public class IncDecNode : AstNode {
+namespace Irony.Interpreter.Ast
+{
+  public class IncDecNode : AstNode
+  {
     public bool IsPostfix;
     public string OpSymbol;
     public string BinaryOpSymbol; //corresponding binary operation: + for ++, - for --
-    public ExpressionType BinaryOp; 
+    public ExpressionType BinaryOp;
     public AstNode Argument;
     private OperatorImplementation _lastUsed;
 
-    public override void Init(AstContext context, ParseTreeNode treeNode) {
+    public override void Init(AstContext context, ParseTreeNode treeNode)
+    {
       base.Init(context, treeNode);
       var nodes = treeNode.GetMappedChildNodes();
-      FindOpAndDetectPostfix(nodes); 
-      int argIndex = IsPostfix? 0 : 1;
+      FindOpAndDetectPostfix(nodes);
+      int argIndex = IsPostfix ? 0 : 1;
       Argument = AddChild(NodeUseType.ValueReadWrite, "Arg", nodes[argIndex]);
       BinaryOpSymbol = OpSymbol[0].ToString(); //take a single char out of ++ or --
-      var interpContext = (InterpreterAstContext)context; 
-      BinaryOp = interpContext.OperatorHandler.GetOperatorExpressionType(BinaryOpSymbol); 
+      var interpContext = (InterpreterAstContext)context;
+      BinaryOp = interpContext.OperatorHandler.GetOperatorExpressionType(BinaryOpSymbol);
       base.AsString = OpSymbol + (IsPostfix ? "(postfix)" : "(prefix)");
     }
 
-    private void FindOpAndDetectPostfix(ParseTreeNodeList mappedNodes) {
+    private void FindOpAndDetectPostfix(ParseTreeNodeList mappedNodes)
+    {
       IsPostfix = false; //assume it 
       OpSymbol = mappedNodes[0].FindTokenAndGetText();
       if (OpSymbol == "--" || OpSymbol == "++") return;
@@ -49,20 +47,21 @@ namespace Irony.Interpreter.Ast {
       OpSymbol = mappedNodes[1].FindTokenAndGetText();
     }
 
-    protected override object DoEvaluate(ScriptThread thread) {
+    protected override object DoEvaluate(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       var oldValue = Argument.Evaluate(thread);
       var newValue = thread.Runtime.ExecuteBinaryOperator(BinaryOp, oldValue, 1, ref _lastUsed);
       Argument.SetValue(thread, newValue);
       var result = IsPostfix ? oldValue : newValue;
       thread.CurrentNode = Parent; //standard epilog
-      return result; 
+      return result;
     }
 
-    public override void SetIsTail() {
+    public override void SetIsTail()
+    {
       base.SetIsTail();
-      Argument.SetIsTail(); 
+      Argument.SetIsTail();
     }
   }//class
-
 }

@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Irony.Parsing {
+﻿namespace Irony.Parsing
+{
   //TODO: Improve recovery by adding automatic injection of missing tokens.
   // Make sure we ALWAYS have output parse tree, even if it is messed up
-  public class ErrorRecoveryParserAction : ParserAction {
+  public class ErrorRecoveryParserAction : ParserAction
+  {
 
-    public override void Execute(ParsingContext context) {
+    public override void Execute(ParsingContext context)
+    {
       context.Status = ParserStatus.Error;
       var grammar = context.Language.Grammar;
       grammar.ReportParseError(context);
@@ -19,45 +17,52 @@ namespace Irony.Parsing {
       context.Status = ParserStatus.Recovering;
       context.AddTrace(Resources.MsgTraceRecovering); // *** RECOVERING - searching for state with error shift *** 
       var recovered = TryRecoverFromError(context);
-      if (recovered) {
+      if (recovered)
+      {
         context.AddTrace(Resources.MsgTraceRecoverSuccess); //add new trace entry
         context.Status = ParserStatus.Parsing;
-      } else {
+      }
+      else
+      {
         context.AddTrace(Resources.MsgTraceRecoverFailed);
         context.Status = ParserStatus.Error;
       }
     }
 
-    protected bool TryRecoverFromError(ParsingContext context) {
+    protected bool TryRecoverFromError(ParsingContext context)
+    {
       var grammar = context.Language.Grammar;
-      var parser = context.Parser; 
+      var parser = context.Parser;
       //1. We need to find a state in the stack that has a shift item based on error production (with error token), 
       // and error terminal is current. This state would have a shift action on error token. 
       ParserAction errorShiftAction = FindErrorShiftActionInStack(context);
       if (errorShiftAction == null) return false; //we failed to recover
-      context.AddTrace(Resources.MsgTraceRecoverFoundState, context.CurrentParserState); 
+      context.AddTrace(Resources.MsgTraceRecoverFoundState, context.CurrentParserState);
       //2. Shift error token - execute shift action
       context.AddTrace(Resources.MsgTraceRecoverShiftError, errorShiftAction);
       errorShiftAction.Execute(context);
       //4. Now we need to go along error production until the end, shifting tokens that CAN be shifted and ignoring others.
       //   We shift until we can reduce
       context.AddTrace(Resources.MsgTraceRecoverShiftTillEnd);
-      while (true) {
-        if (context.CurrentParserInput == null) 
-          parser.ReadInput(); 
+      while (true)
+      {
+        if (context.CurrentParserInput == null)
+          parser.ReadInput();
         if (context.CurrentParserInput.Term == grammar.Eof)
-          return false; 
+          return false;
         //Check if we can reduce
         var nextAction = parser.GetNextAction();
-        if (nextAction == null) {
+        if (nextAction == null)
+        {
           parser.ReadInput();
-          continue; 
+          continue;
         }
-        if (nextAction is ReduceParserAction) {
+        if (nextAction is ReduceParserAction)
+        {
           //We are reducing a fragment containing error - this is the end of recovery
           //Clear all input token queues and buffered input, reset location back to input position token queues; 
           context.SetSourceLocation(context.CurrentParserInput.Span.Location);
-       
+
           //Reduce error production - it creates parent non-terminal that "hides" error inside
           context.AddTrace(Resources.MsgTraceRecoverReducing);
           context.AddTrace(Resources.MsgTraceRecoverAction, nextAction);
@@ -70,11 +75,13 @@ namespace Irony.Parsing {
       }
     }//method
 
-    private ParserAction FindErrorShiftActionInStack(ParsingContext context) {
-      var grammar = context.Language.Grammar; 
-      while (context.ParserStack.Count >= 1) {
+    private ParserAction FindErrorShiftActionInStack(ParsingContext context)
+    {
+      var grammar = context.Language.Grammar;
+      while (context.ParserStack.Count >= 1)
+      {
         ParserAction errorShiftAction;
-        if (context.CurrentParserState.Actions.TryGetValue(grammar.SyntaxError, out errorShiftAction) 
+        if (context.CurrentParserState.Actions.TryGetValue(grammar.SyntaxError, out errorShiftAction)
              && errorShiftAction is ShiftParserAction)
           return errorShiftAction;
         //pop next state from stack

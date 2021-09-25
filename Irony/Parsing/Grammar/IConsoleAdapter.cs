@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Irony.Parsing {
+﻿namespace Irony.Parsing
+{
   //An abstraction of a Console.
-  public interface IConsoleAdapter {
+  public interface IConsoleAdapter
+  {
     bool Canceled { get; set; }
     void Write(string text);
     void WriteLine(string text);
@@ -17,7 +14,8 @@ namespace Irony.Parsing {
     string GetOutput();
   }
 
-  public enum ConsoleTextStyle {
+  public enum ConsoleTextStyle
+  {
     Normal,
     Error,
   }

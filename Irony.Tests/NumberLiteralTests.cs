@@ -1,25 +1,26 @@
 //Authors: Roman Ivantsov, Philipp Serr
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
+using System;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
   [TestClass]
-  public class NumberLiteralTests {
+  public class NumberLiteralTests
+  {
 
     [TestMethod]
-    public void TestNumber_General() {
+    public void TestNumber_General()
+    {
       Parser parser; Token token;
 
       NumberLiteral number = new NumberLiteral("Number");
@@ -37,8 +38,9 @@ namespace Irony.Tests {
     }//method
 
     //The following "sign" test methods and a fix are contributed by ashmind codeplex user
-     [TestMethod]
-    public void TestNumber_SignedDoesNotMatchSingleMinus() {
+    [TestMethod]
+    public void TestNumber_SignedDoesNotMatchSingleMinus()
+    {
       Parser parser; Token token;
 
       var number = new NumberLiteral("number", NumberOptions.AllowSign);
@@ -48,17 +50,19 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-     public void TestNumber_SignedDoesNotMatchSinglePlus() {
-       Parser parser; Token token;
+    public void TestNumber_SignedDoesNotMatchSinglePlus()
+    {
+      Parser parser; Token token;
 
-       var number = new NumberLiteral("number", NumberOptions.AllowSign);
-       parser = TestHelper.CreateParser(number);
-       token = parser.ParseInput("+");
-       Assert.IsTrue(token.IsError(), "Parsed single '+' as a number value.");
-     }
-    
+      var number = new NumberLiteral("number", NumberOptions.AllowSign);
+      parser = TestHelper.CreateParser(number);
+      token = parser.ParseInput("+");
+      Assert.IsTrue(token.IsError(), "Parsed single '+' as a number value.");
+    }
+
     [TestMethod]
-    public void TestNumber_SignedMatchesNegativeCorrectly() {
+    public void TestNumber_SignedMatchesNegativeCorrectly()
+    {
       Parser parser; Token token;
 
       var number = new NumberLiteral("number", NumberOptions.AllowSign);
@@ -68,7 +72,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestNumber_CSharp() {
+    public void TestNumber_CSharp()
+    {
       Parser parser; Token token;
 
       double eps = 0.0001;
@@ -155,7 +160,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestNumber_VB() {
+    public void TestNumber_VB()
+    {
       Parser parser; Token token;
 
       double eps = 0.0001;
@@ -268,7 +274,8 @@ namespace Irony.Tests {
 
 
     [TestMethod]
-    public void TestNumber_Python() {
+    public void TestNumber_Python()
+    {
       Parser parser; Token token;
 
       double eps = 0.0001;
@@ -332,7 +339,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestNumber_Scheme() {
+    public void TestNumber_Scheme()
+    {
       Parser parser; Token token;
 
       double eps = 0.0001;
@@ -358,7 +366,8 @@ namespace Irony.Tests {
     }//method
 
     [TestMethod]
-    public void TestNumber_WithUnderscore() {
+    public void TestNumber_WithUnderscore()
+    {
       Parser parser; Token token;
 
       var number = new NumberLiteral("number", NumberOptions.AllowUnderscore);
@@ -374,7 +383,8 @@ namespace Irony.Tests {
     //There was a bug discovered in NumberLiteral - it cannot parse appropriately the int.MinValue value.
     // This test ensures that the issue is fixed.
     [TestMethod]
-    public void TestNumber_MinMaxValues() {
+    public void TestNumber_MinMaxValues()
+    {
       Parser parser; Token token;
 
       var number = new NumberLiteral("number", NumberOptions.AllowSign);
@@ -382,7 +392,7 @@ namespace Irony.Tests {
       parser = TestHelper.CreateParser(number);
       var s = int.MinValue.ToString();
       token = parser.ParseInput(s);
-      Assert.IsFalse(token.IsError(), "Failed to scan int.MinValue, scanner returned an error."); 
+      Assert.IsFalse(token.IsError(), "Failed to scan int.MinValue, scanner returned an error.");
       CheckType(token, typeof(int));
       Assert.IsTrue((int)token.Value == int.MinValue, "Failed to scan int.MinValue, scanned value does not match.");
       s = int.MaxValue.ToString();
@@ -392,7 +402,8 @@ namespace Irony.Tests {
       Assert.IsTrue((int)token.Value == int.MaxValue, "Failed to read int.MaxValue");
     }//method
 
-    private void CheckType(Token token, Type type) {
+    private void CheckType(Token token, Type type)
+    {
       Assert.IsNotNull(token, "TryMatch returned null, while token was expected.");
       Type vtype = token.Value.GetType();
       Assert.IsTrue(vtype == type, "Invalid target type, expected " + type.ToString() + ", found:  " + vtype);

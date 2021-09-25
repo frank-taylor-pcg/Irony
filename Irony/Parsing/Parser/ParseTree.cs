@@ -10,12 +10,10 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
   /* 
     A node for a parse tree (concrete syntax tree) - an initial syntax representation produced by parser.
     It contains all syntax elements of the input text, each element represented by a generic node ParseTreeNode. 
@@ -27,77 +25,89 @@ namespace Irony.Parsing {
     The ParseTreeNode also works as a stack element in the parser stack, so it has the State property to carry 
     the pushed parser state while it is in the stack. 
   */
-  public class ParseTreeNode {
+  public class ParseTreeNode
+  {
     public object AstNode;
-    public Token Token; 
+    public Token Token;
     public BnfTerm Term;
     public int Precedence;
     public Associativity Associativity;
     public SourceSpan Span;
     //Making ChildNodes property (not field) following request by Matt K, Bill H
-    public ParseTreeNodeList ChildNodes {get; private set;}
+    public ParseTreeNodeList ChildNodes { get; private set; }
     public bool IsError;
     internal ParserState State;      //used by parser to store current state when node is pushed into the parser stack
     public object Tag; //for use by custom parsers, Irony does not use it
     public TokenList Comments; //Comments preceding this node
 
-    private ParseTreeNode(){
+    private ParseTreeNode()
+    {
       ChildNodes = new ParseTreeNodeList();
     }
 
-    public ParseTreeNode(Token token) : this()  {
+    public ParseTreeNode(Token token) : this()
+    {
       Token = token;
       Term = token.Terminal;
       Precedence = Term.Precedence;
       Associativity = token.Terminal.Associativity;
       Span = new SourceSpan(token.Location, token.Length);
-      IsError = token.IsError(); 
+      IsError = token.IsError();
     }
 
-    public ParseTreeNode(ParserState initialState) : this() {
+    public ParseTreeNode(ParserState initialState) : this()
+    {
       State = initialState;
     }
 
-    public ParseTreeNode(NonTerminal term, SourceSpan span)  : this(){
+    public ParseTreeNode(NonTerminal term, SourceSpan span) : this()
+    {
       Term = term;
-      Span = span; 
+      Span = span;
     }
-    
-    public override string ToString() {
-      if (Term == null) 
+
+    public override string ToString()
+    {
+      if (Term == null)
         return "(S0)"; //initial state node
-      else 
-        return Term.GetParseNodeCaption(this); 
+      else
+        return Term.GetParseNodeCaption(this);
     }//method
 
 
-    public string FindTokenAndGetText() {
+    public string FindTokenAndGetText()
+    {
       var tkn = FindToken();
-      return tkn == null ? null : tkn.Text;       
+      return tkn == null ? null : tkn.Text;
     }
-    public Token FindToken() {
-      return FindFirstChildTokenRec(this); 
+    public Token FindToken()
+    {
+      return FindFirstChildTokenRec(this);
     }
-    private static Token FindFirstChildTokenRec(ParseTreeNode node) {
+    private static Token FindFirstChildTokenRec(ParseTreeNode node)
+    {
       if (node.Token != null) return node.Token;
-      foreach (var child in node.ChildNodes) {
+      foreach (var child in node.ChildNodes)
+      {
         var tkn = FindFirstChildTokenRec(child);
-        if (tkn != null) return tkn; 
+        if (tkn != null) return tkn;
       }
-      return null; 
+      return null;
     }
 
     /// <summary>Returns true if the node is punctuation or it is transient with empty child list.</summary>
     /// <returns>True if parser can safely ignore this node.</returns>
-    public bool IsPunctuationOrEmptyTransient() {
+    public bool IsPunctuationOrEmptyTransient()
+    {
       if (Term.Flags.IsSet(TermFlags.IsPunctuation))
         return true;
       if (Term.Flags.IsSet(TermFlags.IsTransient) && ChildNodes.Count == 0)
         return true;
-      return false; 
+      return false;
     }
 
-    public bool IsOperator() {
+    public bool IsOperator()
+    {
       return Term.Flags.IsSet(TermFlags.IsOperator);
     }
 
@@ -105,37 +115,40 @@ namespace Irony.Parsing {
 
   public class ParseTreeNodeList : List<ParseTreeNode> { }
 
-  public enum ParseTreeStatus {
+  public enum ParseTreeStatus
+  {
     Parsing,
     Partial,
     Parsed,
     Error,
   }
 
-  public class ParseTree {
-    public ParseTreeStatus Status {get; internal set;}
+  public class ParseTree
+  {
+    public ParseTreeStatus Status { get; internal set; }
     public readonly string SourceText;
-    public readonly string FileName; 
+    public readonly string FileName;
     public readonly TokenList Tokens = new TokenList();
-    public readonly TokenList OpenBraces = new TokenList(); 
+    public readonly TokenList OpenBraces = new TokenList();
     public ParseTreeNode Root;
     public readonly LogMessageList ParserMessages = new LogMessageList();
     public long ParseTimeMilliseconds;
     public object Tag; //custom data object, use it anyway you want
 
-    public ParseTree(string sourceText, string fileName) {
+    public ParseTree(string sourceText, string fileName)
+    {
       SourceText = sourceText;
       FileName = fileName;
       Status = ParseTreeStatus.Parsing;
     }
 
-    public bool HasErrors() {
+    public bool HasErrors()
+    {
       if (ParserMessages.Count == 0) return false;
       foreach (var err in ParserMessages)
         if (err.Level == ErrorLevel.Error) return true;
-      return false; 
+      return false;
     }//method
 
   }//class
-
 }

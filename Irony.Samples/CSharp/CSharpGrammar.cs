@@ -1,12 +1,9 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 using System.Globalization;
+using System.Linq;
 
-namespace Irony.Samples.CSharp {
-
+namespace Irony.Samples.CSharp
+{
   //Full c# 3.0 grammar; all but 2 features are not implemented:
   //  - preprocessor directives (currently treated as comment lines)
   //  - LINQ query expressions.
@@ -23,10 +20,12 @@ namespace Irony.Samples.CSharp {
   #endregion
 
   [Language("c#", "3.5", "Sample c# grammar")]
-  public class CSharpGrammar : Grammar {
+  public class CSharpGrammar : Grammar
+  {
     TerminalSet _skipTokensInPreview = new TerminalSet(); //used in token preview for conflict resolution
-    public CSharpGrammar() {
-      this.GrammarComments = "NOTE: This grammar is just a demo, and it is a broken demo.\r\n" + 
+    public CSharpGrammar()
+    {
+      this.GrammarComments = "NOTE: This grammar is just a demo, and it is a broken demo.\r\n" +
                              "Demonstrates token preview technique to help parser resolve conflicts.\r\n";
       #region Lexical structure
       StringLiteral StringLiteral = TerminalFactory.CreateCSharpString("StringLiteral");
@@ -346,26 +345,26 @@ namespace Irony.Samples.CSharp {
       RegisterOperators(-1, "??");
 
       this.MarkPunctuation(";", ",", "(", ")", "{", "}", "[", "]", ":");
-      this.MarkTransient(namespace_member_declaration, member_declaration, type_declaration, statement, embedded_statement, expression, 
+      this.MarkTransient(namespace_member_declaration, member_declaration, type_declaration, statement, embedded_statement, expression,
         literal, bin_op, primary_expression, expression);
 
       this.AddTermsReportGroup("assignment", "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=");
-      this.AddTermsReportGroup("typename", "bool", "decimal", "float", "double", "string", "object", 
+      this.AddTermsReportGroup("typename", "bool", "decimal", "float", "double", "string", "object",
         "sbyte", "byte", "short", "ushort", "int", "uint", "long", "ulong", "char");
-      this.AddTermsReportGroup("statement", "if", "switch", "do", "while", "for", "foreach", "continue", "goto", "return", "try", "yield", 
+      this.AddTermsReportGroup("statement", "if", "switch", "do", "while", "for", "foreach", "continue", "goto", "return", "try", "yield",
                                             "break", "throw", "unchecked", "using");
-      this.AddTermsReportGroup("type declaration", "public", "private", "protected", "static", "internal", "sealed", "abstract", "partial", 
+      this.AddTermsReportGroup("type declaration", "public", "private", "protected", "static", "internal", "sealed", "abstract", "partial",
                                                    "class", "struct", "delegate", "interface", "enum");
       this.AddTermsReportGroup("member declaration", "virtual", "override", "readonly", "volatile", "extern");
       this.AddTermsReportGroup("constant", Number, StringLiteral, CharLiteral);
       this.AddTermsReportGroup("constant", "true", "false", "null");
 
       this.AddTermsReportGroup("unary operator", "+", "-", "!", "~");
-      
+
       this.AddToNoReportGroup(comma, semi);
       this.AddToNoReportGroup("var", "const", "new", "++", "--", "this", "base", "checked", "lock", "typeof", "default",
                                "{", "}", "[");
-     
+
       //
       #endregion
 
@@ -525,7 +524,7 @@ namespace Irony.Samples.CSharp {
       //I think it's a mistake; there must be additional entry here for arithm expressions, so we put them here. 
       // We also have to add "is" and "as" expressions here, as we don't build entire hierarchy of elements for expressing
       // precedence (where they appear in original spec); so we put them here 
-      bin_op.Rule = ToTerm("<")       
+      bin_op.Rule = ToTerm("<")
                   | "||" | "&&" | "|" | "^" | "&" | "==" | "!=" | ">" | "<=" | ">=" | "<<" | ">>" | "+" | "-" | "*" | "/" | "%"
                   | "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
                   | "is" | "as" | "??";
@@ -655,7 +654,7 @@ namespace Irony.Samples.CSharp {
          | property_declaration | event_declaration | indexer_declaration
          | operator_declaration | conversion_operator_declaration
          | constructor_declaration | destructor_declaration | type_declaration;
-      member_declaration.ErrorRule = SyntaxError + ";" | SyntaxError + "}" ;
+      member_declaration.ErrorRule = SyntaxError + ";" | SyntaxError + "}";
       member_declarations_opt.Rule = MakeStarRule(member_declarations_opt, null, member_declaration);
 
       //Modifiers - see note #1 in Notes.txt file
@@ -776,55 +775,61 @@ namespace Irony.Samples.CSharp {
 
       //Prepare term set for conflict resolution
       _skipTokensInPreview.UnionWith(new Terminal[] { dot, identifier, comma, ToTerm("::"), comma, ToTerm("["), ToTerm("]") });
-    
+
     }
 
     #region conflict resolution for "<"
-/* The shift-reduce conflict for "<" symbol is the problem of deciding what is "<" symbol in the input - is it 
- * opening brace for generic reference, or logical operator. The following is a printout of parser state that has a conflict
- * The handling code needs to run ahead and decide a proper action: if we see ">", then it is a generic bracket and we do shift; 
- * otherwise, it is an operator and we make Reduce
- * 
-State S188 (Inadequate)
-  Shift items:
-    member_access_segments_opt -> member_access_segments_opt ·member_access_segment 
-    member_access_segment -> ·. Identifier 
-    member_access_segment -> ·array_indexer 
-    array_indexer -> ·[ expression_list ] 
-    member_access_segment -> ·argument_list_par 
-    argument_list_par -> ·( argument_list_opt ) 
-    member_access_segment -> ·type_argument_list 
-    type_argument_list -> ·_<_ type_ref_list > 
-    _<_ -> ·< 
-  Reduce items:
-    member_access -> identifier_ext member_access_segments_opt · [? , ) : ; } ] Identifier ++ -- || && | ^ & == != > <= >= << >> + - * / % = += -= *= /= %= &= |= ^= <<= >>= is as ?? <]
-  Shifts: member_access_segment->S220, .->S221, array_indexer->S222, [->S223, argument_list_par->S224, (->S225, type_argument_list->S226, _<_->S59, 
-   
-*/
+    /* The shift-reduce conflict for "<" symbol is the problem of deciding what is "<" symbol in the input - is it 
+     * opening brace for generic reference, or logical operator. The following is a printout of parser state that has a conflict
+     * The handling code needs to run ahead and decide a proper action: if we see ">", then it is a generic bracket and we do shift; 
+     * otherwise, it is an operator and we make Reduce
+     * 
+    State S188 (Inadequate)
+      Shift items:
+        member_access_segments_opt -> member_access_segments_opt ·member_access_segment 
+        member_access_segment -> ·. Identifier 
+        member_access_segment -> ·array_indexer 
+        array_indexer -> ·[ expression_list ] 
+        member_access_segment -> ·argument_list_par 
+        argument_list_par -> ·( argument_list_opt ) 
+        member_access_segment -> ·type_argument_list 
+        type_argument_list -> ·_<_ type_ref_list > 
+        _<_ -> ·< 
+      Reduce items:
+        member_access -> identifier_ext member_access_segments_opt · [? , ) : ; } ] Identifier ++ -- || && | ^ & == != > <= >= << >> + - * / % = += -= *= /= %= &= |= ^= <<= >>= is as ?? <]
+      Shifts: member_access_segment->S220, .->S221, array_indexer->S222, [->S223, argument_list_par->S224, (->S225, type_argument_list->S226, _<_->S59, 
+
+    */
     //Here is an elaborate generic declaration which can be used as a good test. Perfectly legal, uncomment it to check that c#
     // accepts it:
     // List<Dictionary<string, object[,]>> genericVar; 
-    private void ResolveLessThanConflict(ParsingContext context, CustomParserAction customAction) {
+    private void ResolveLessThanConflict(ParsingContext context, CustomParserAction customAction)
+    {
       var scanner = context.Parser.Scanner;
       string previewSym = null;
-      if (context.CurrentParserInput.Term.Name == "<") {
-        scanner.BeginPreview(); 
+      if (context.CurrentParserInput.Term.Name == "<")
+      {
+        scanner.BeginPreview();
         int ltCount = 0;
-        while(true) {
+        while (true)
+        {
           //Find first token ahead (using preview mode) that is either end of generic parameter (">") or something else
           Token preview;
-          do {
+          do
+          {
             preview = scanner.GetToken();
           } while (_skipTokensInPreview.Contains(preview.Terminal) && preview.Terminal != base.Eof);
           //See what did we find
-          previewSym = preview.Terminal.Name; 
+          previewSym = preview.Terminal.Name;
           if (previewSym == "<")
             ltCount++;
-          else if (previewSym == ">" && ltCount > 0) {
+          else if (previewSym == ">" && ltCount > 0)
+          {
             ltCount--;
-            continue;               
-          } else 
-            break; 
+            continue;
+          }
+          else
+            break;
         }
         scanner.EndPreview(true); //keep previewed tokens; important to keep ">>" matched to two ">" symbols, not one combined symbol (see method below)
       }//if
@@ -842,20 +847,25 @@ State S188 (Inadequate)
     // It should be recognized as two ">" symbols, not a single ">>" operator
     // By default, the ">>" has higher priority over single ">" symbol because it is longer. 
     // When this method is called we force the selection to a single ">"
-    public override void OnScannerSelectTerminal(ParsingContext context) {
-      if (context.Source.PreviewChar == '>' && context.Status == ParserStatus.Previewing) {
+    public override void OnScannerSelectTerminal(ParsingContext context)
+    {
+      if (context.Source.PreviewChar == '>' && context.Status == ParserStatus.Previewing)
+      {
         context.CurrentTerminals.Clear();
         context.CurrentTerminals.Add(ToTerm(">")); //select the ">" terminal
       }
-      base.OnScannerSelectTerminal(context); 
+      base.OnScannerSelectTerminal(context);
     }
     #endregion
 
     // See    http://www.jaggersoft.com/csharp_standard/9.3.3.htm
-    public override void SkipWhitespace(ISourceStream source) {
-      while (!source.EOF()) {
+    public override void SkipWhitespace(ISourceStream source)
+    {
+      while (!source.EOF())
+      {
         var ch = source.PreviewChar;
-        switch (ch) {
+        switch (ch)
+        {
           case ' ':
           case '\t':
           case '\r':
@@ -878,4 +888,3 @@ State S188 (Inadequate)
     }
   }//class
 }//namespace
-

@@ -10,22 +10,19 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+namespace Irony.Parsing
+{
 
-namespace Irony.Parsing {
-  
   /// <summary>
   /// Interface for Terminals to access the source stream and produce tokens.
   /// </summary>
-  public interface ISourceStream {
+  public interface ISourceStream
+  {
 
     /// <summary>
     /// Returns the source text
     /// </summary>
-    string Text { get; } 
+    string Text { get; }
 
     /// <summary>
     /// Gets or sets the start location (position, row, column) of the new token
@@ -45,12 +42,12 @@ namespace Irony.Parsing {
     /// <summary>
     /// Gets a char at preview position
     /// </summary>
-    char PreviewChar { get; } 
+    char PreviewChar { get; }
     /// <summary>
     /// Gets the char at position next after the PrevewPosition 
     /// </summary>
     char NextPreviewChar { get; }    //char at PreviewPosition+1
-    
+
     /// <summary>
     /// Creates a new token based on current preview position.
     /// </summary>
@@ -72,15 +69,13 @@ namespace Irony.Parsing {
     bool MatchSymbol(string symbol);
 
     bool EOF();
-  
+
     /*
     //This member is intentionally removed from ISourceStream and made private in SourceStream class. The purpose is to discourage
      its use or imitation - it produces a new string object which means new garbage for GC. All Irony-defined Terminal classes 
      are implemented without it, but you can always reproduce the implementation in your custom code if you really need it
     string GetPreviewText();
-     */ 
+     */
 
   }//interface
-
-
 }

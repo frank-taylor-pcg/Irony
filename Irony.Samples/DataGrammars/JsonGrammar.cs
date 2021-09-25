@@ -1,25 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Irony.Parsing;
+﻿using Irony.Parsing;
 
-namespace Irony.Samples.Json {
+namespace Irony.Samples.Json
+{
   [Language("JSON", "1.0", "JSON data format")]
-  public class JsonGrammar : Grammar {
-    public JsonGrammar() {
+  public class JsonGrammar : Grammar
+  {
+    public JsonGrammar()
+    {
       //Terminals
       var jstring = new StringLiteral("string", "\"");
       var jnumber = new NumberLiteral("number");
-      var comma = ToTerm(","); 
-      
+      var comma = ToTerm(",");
+
       //Nonterminals
-      var jobject = new NonTerminal("Object"); 
+      var jobject = new NonTerminal("Object");
       var jobjectBr = new NonTerminal("ObjectBr");
-      var jarray = new NonTerminal("Array"); 
+      var jarray = new NonTerminal("Array");
       var jarrayBr = new NonTerminal("ArrayBr");
       var jvalue = new NonTerminal("Value");
-      var jprop = new NonTerminal("Property"); 
+      var jprop = new NonTerminal("Property");
 
       //Rules
       jvalue.Rule = jstring | jnumber | jobjectBr | jarrayBr | "true" | "false" | "null";

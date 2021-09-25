@@ -1,31 +1,34 @@
-﻿using System;
+﻿using FastColoredTextBoxNS;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms;
-using FastColoredTextBoxNS;
 using SWFBorderStyle = System.Windows.Forms.BorderStyle;
 
-namespace Irony.WinForms {
+namespace Irony.WinForms
+{
   /// <summary>
   /// Common ancestor for Irony.WinForms text boxes.
   /// Wraps around FastColoredTextBox, adds VisualStyle border.
   /// Allows implicit conversion to the System.Windows.Forms.TextBox.
   /// </summary>
   [ToolboxItem(false)]
-  public partial class IronyTextBoxBase : UserControl, ITextBox {
+  public partial class IronyTextBoxBase : UserControl, ITextBox
+  {
     BorderStyleEx _borderStyle;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="IronyTextBoxBase" /> class.
     /// </summary>
-    public IronyTextBoxBase() {
+    public IronyTextBoxBase()
+    {
       InitializeComponent();
       InitializeFastColoredTextBox();
       BorderStyle = BorderStyleEx.VisualStyle;
     }
 
-    private void InitializeFastColoredTextBox() {
+    private void InitializeFastColoredTextBox()
+    {
       FastColoredTextBox = CreateFastColoredTextBox();
       FastColoredTextBox.Dock = DockStyle.Fill;
       FastColoredTextBox.Name = "FastColoredTextBox";
@@ -35,7 +38,8 @@ namespace Irony.WinForms {
     }
 
     /// <remarks>Override this method to create custom descendant of FastColoredTextBox.</remarks>
-    protected virtual FastColoredTextBox CreateFastColoredTextBox() {
+    protected virtual FastColoredTextBox CreateFastColoredTextBox()
+    {
       var textBox = new FastColoredTextBox();
       textBox.AutoScrollMinSize = new System.Drawing.Size(25, 15);
       return textBox;
@@ -49,10 +53,13 @@ namespace Irony.WinForms {
     /// </summary>
     [DefaultValue(""), Browsable(true), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible), Localizable(true)]
     [Editor("System.ComponentModel.Design.MultilineStringEditor, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
-    public override string Text {
+    public override string Text
+    {
       get { return FastColoredTextBox.Text; }
-      set {
-        if (Text != value) {
+      set
+      {
+        if (Text != value)
+        {
           FastColoredTextBox.ClearUndo();
           FastColoredTextBox.ClearStylesBuffer();
           FastColoredTextBox.Text = value;
@@ -63,7 +70,8 @@ namespace Irony.WinForms {
       }
     }
 
-    private void FastColoredTextBox_TextChanged(object sender, TextChangedEventArgs args) {
+    private void FastColoredTextBox_TextChanged(object sender, TextChangedEventArgs args)
+    {
       OnTextChanged(args);
     }
 
@@ -71,15 +79,21 @@ namespace Irony.WinForms {
     /// Gets or sets the border style of the control.
     /// </summary>
     [DefaultValue(BorderStyleEx.VisualStyle), Browsable(true)]
-    public new BorderStyleEx BorderStyle {
+    public new BorderStyleEx BorderStyle
+    {
       get { return _borderStyle; }
-      set {
-        if (_borderStyle != value) {
+      set
+      {
+        if (_borderStyle != value)
+        {
           _borderStyle = value;
-          if (_borderStyle != BorderStyleEx.VisualStyle) {
+          if (_borderStyle != BorderStyleEx.VisualStyle)
+          {
             base.BorderStyle = (SWFBorderStyle)value;
             base.Padding = new Padding(0);
-          } else {
+          }
+          else
+          {
             base.BorderStyle = SWFBorderStyle.None;
             if (Application.RenderWithVisualStyles)
               base.Padding = new Padding(1);
@@ -95,7 +109,8 @@ namespace Irony.WinForms {
     /// Hide the inherited Padding property.
     /// </summary>
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public new Padding Padding {
+    public new Padding Padding
+    {
       get { return new Padding(0); }
       set { /* ignore */ }
     }
@@ -104,13 +119,16 @@ namespace Irony.WinForms {
     /// Raises the <see cref="E:Paint" /> event.
     /// </summary>
     /// <param name="args">The <see cref="PaintEventArgs" /> instance containing the event data.</param>
-    protected override void OnPaint(PaintEventArgs args) {
+    protected override void OnPaint(PaintEventArgs args)
+    {
       base.OnPaint(args);
       // paint custom control borders
-      if (BorderStyle == BorderStyleEx.VisualStyle) {
+      if (BorderStyle == BorderStyleEx.VisualStyle)
+      {
         if (Application.RenderWithVisualStyles)
           ControlPaint.DrawVisualStyleBorder(args.Graphics, new Rectangle(0, 0, Width - 1, Height - 1));
-        else {
+        else
+        {
           ControlPaint.DrawBorder3D(args.Graphics, new Rectangle(0, 0, Width, Height), Border3DStyle.SunkenOuter);
           ControlPaint.DrawBorder3D(args.Graphics, new Rectangle(1, 1, Width - 2, Height - 2), Border3DStyle.SunkenInner);
         }
@@ -118,7 +136,8 @@ namespace Irony.WinForms {
     }
 
     [DefaultValue(false)]
-    public bool ReadOnly {
+    public bool ReadOnly
+    {
       get { return FastColoredTextBox.ReadOnly; }
       set { FastColoredTextBox.ReadOnly = value; }
     }
@@ -128,7 +147,8 @@ namespace Irony.WinForms {
     /// </summary>
     /// <param name="start">The starting position.</param>
     /// <param name="length">The length of the selection.</param>
-    public void Select(int start, int length) {
+    public void Select(int start, int length)
+    {
       FastColoredTextBox.SelectionStart = start;
       FastColoredTextBox.SelectionLength = length;
       FastColoredTextBox.DoCaretVisible();
@@ -138,7 +158,8 @@ namespace Irony.WinForms {
     /// Gets or sets the starting point of the text selected in the text box.
     /// </summary>
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public virtual int SelectionStart {
+    public virtual int SelectionStart
+    {
       get { return FastColoredTextBox.SelectionStart; }
       set { FastColoredTextBox.SelectionStart = value; }
     }
@@ -147,7 +168,8 @@ namespace Irony.WinForms {
     /// Gets or sets the number of characters selected in the text box.
     /// </summary>
     [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public virtual int SelectionLength {
+    public virtual int SelectionLength
+    {
       get { return FastColoredTextBox.SelectionLength; }
       set { FastColoredTextBox.SelectionLength = value; }
     }
@@ -155,7 +177,8 @@ namespace Irony.WinForms {
     /// <summary>
     /// Scrolls the contents of the control to the current caret position.
     /// </summary>
-    public void ScrollToCaret() {
+    public void ScrollToCaret()
+    {
       FastColoredTextBox.DoCaretVisible();
     }
   }

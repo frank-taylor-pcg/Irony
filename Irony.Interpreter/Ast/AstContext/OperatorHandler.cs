@@ -1,52 +1,59 @@
-﻿using System;
+﻿using Irony.Parsing;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
-using Irony.Parsing; 
-
-namespace Irony.Interpreter.Ast {
-
-
-  public class OperatorInfo {
+namespace Irony.Interpreter.Ast
+{
+  public class OperatorInfo
+  {
     public string Symbol;
     public ExpressionType ExpressionType;
     public int Precedence;
     public Associativity Associativity;
   }
 
-  public class OperatorInfoDictionary : Dictionary<string, OperatorInfo> {
+  public class OperatorInfoDictionary : Dictionary<string, OperatorInfo>
+  {
     public OperatorInfoDictionary(bool caseSensitive) : base(caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase) { }
 
-    public void Add(string symbol, ExpressionType expressionType, int precedence, Associativity associativity = Associativity.Left) {
-      var info = new OperatorInfo() {
-        Symbol = symbol, ExpressionType = expressionType,
-        Precedence = precedence, Associativity = associativity
+    public void Add(string symbol, ExpressionType expressionType, int precedence, Associativity associativity = Associativity.Left)
+    {
+      var info = new OperatorInfo()
+      {
+        Symbol = symbol,
+        ExpressionType = expressionType,
+        Precedence = precedence,
+        Associativity = associativity
       };
       this[symbol] = info;
     }
   }//class
 
 
-  public class OperatorHandler {
+  public class OperatorHandler
+  {
     private OperatorInfoDictionary _registeredOperators;
 
 
-    public OperatorHandler(bool languageCaseSensitive) {
+    public OperatorHandler(bool languageCaseSensitive)
+    {
       _registeredOperators = new OperatorInfoDictionary(languageCaseSensitive);
-      BuildDefaultOperatorMappings(); 
+      BuildDefaultOperatorMappings();
     }
 
-    public ExpressionType GetOperatorExpressionType(string symbol) {
+    public ExpressionType GetOperatorExpressionType(string symbol)
+    {
       OperatorInfo opInfo;
       if (_registeredOperators.TryGetValue(symbol, out opInfo))
         return opInfo.ExpressionType;
       return CustomExpressionTypes.NotAnExpression;
     }
 
-    public virtual ExpressionType GetUnaryOperatorExpressionType(string symbol) {
-      switch (symbol.ToLowerInvariant()) {
+    public virtual ExpressionType GetUnaryOperatorExpressionType(string symbol)
+    {
+      switch (symbol.ToLowerInvariant())
+      {
         case "+": return ExpressionType.UnaryPlus;
         case "-": return ExpressionType.Negate;
         case "!":
@@ -59,15 +66,17 @@ namespace Irony.Interpreter.Ast {
     }
 
 
-    public virtual ExpressionType GetBinaryOperatorForAugmented(ExpressionType augmented) {
-      switch(augmented) {
+    public virtual ExpressionType GetBinaryOperatorForAugmented(ExpressionType augmented)
+    {
+      switch (augmented)
+      {
         case ExpressionType.AddAssign:
         case ExpressionType.AddAssignChecked:
           return ExpressionType.AddChecked;
         case ExpressionType.AndAssign:
           return ExpressionType.And;
         case ExpressionType.Decrement:
-          return ExpressionType.SubtractChecked; 
+          return ExpressionType.SubtractChecked;
         case ExpressionType.DivideAssign:
           return ExpressionType.Divide;
         case ExpressionType.ExclusiveOrAssign:
@@ -90,10 +99,11 @@ namespace Irony.Interpreter.Ast {
           return CustomExpressionTypes.NotAnExpression;
       }
     }
-    
-    public virtual OperatorInfoDictionary BuildDefaultOperatorMappings() {
+
+    public virtual OperatorInfoDictionary BuildDefaultOperatorMappings()
+    {
       var dict = _registeredOperators;
-      dict.Clear(); 
+      dict.Clear();
       int p = 0; //precedence
 
       p += 10;
@@ -141,7 +151,7 @@ namespace Irony.Interpreter.Ast {
       dict.Add(">>", ExpressionType.RightShift, p);
 
       p += 10;
-      dict.Add("+", ExpressionType.AddChecked, p); 
+      dict.Add("+", ExpressionType.AddChecked, p);
       dict.Add("-", ExpressionType.SubtractChecked, p);
 
       p += 10;
@@ -154,10 +164,8 @@ namespace Irony.Interpreter.Ast {
       dict.Add("??", ExpressionType.Coalesce, p);
       dict.Add("?", ExpressionType.Conditional, p);
 
-      return dict; 
+      return dict;
     }//method
 
   }
-
-
 }

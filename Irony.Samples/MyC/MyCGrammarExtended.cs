@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Irony.Parsing;
+﻿using Irony.Parsing;
 
-namespace Demo {
+namespace Demo
+{
   // Extended MyC Grammar. 
   // For use in testing macros, conditional compilation, includes
 
   [Language("MyC-Extended", "1.0", "MyC Language, extended")]
-  public class MyCGrammarExtended : Irony.Parsing.Grammar {
-    public MyCGrammarExtended() {
+  public class MyCGrammarExtended : Irony.Parsing.Grammar
+  {
+    public MyCGrammarExtended()
+    {
       #region Declare Terminals Here
       CommentTerminal blockComment = new CommentTerminal("block-comment", "/*", "*/");
       CommentTerminal lineComment = new CommentTerminal("line-comment", "//",

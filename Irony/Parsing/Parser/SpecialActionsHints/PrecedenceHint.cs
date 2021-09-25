@@ -10,14 +10,12 @@
  * **********************************************************************************/
 #endregion
 
-using System;
+using Irony.Parsing.Construction;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-using Irony.Parsing.Construction;
-
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
   /// <summary> A hint to use precedence. </summary>
   /// <remarks>
@@ -26,19 +24,22 @@ namespace Irony.Parsing {
   /// activated during parser construction. The hint code analyzes the conflict and resolves it by adding custom or general action
   /// for a conflicting input. 
   /// </remarks>
-  public class PrecedenceHint : GrammarHint {
-    public override void Apply(LanguageData language, LRItem owner) {
+  public class PrecedenceHint : GrammarHint
+  {
+    public override void Apply(LanguageData language, LRItem owner)
+    {
       var state = owner.State;
       var allConflicts = state.BuilderData.Conflicts;
       if (allConflicts.Count == 0)
-        return; 
+        return;
       //Find all conflicts that can be resolved by operator precedence
       // SL does not support Find extension, so we do it with explicit loop
-      var operConflicts = new List<Terminal>(); 
-      foreach(var c in allConflicts)
+      var operConflicts = new List<Terminal>();
+      foreach (var c in allConflicts)
         if (c.Flags.IsSet(TermFlags.IsOperator))
           operConflicts.Add(c);
-      foreach (var conflict in operConflicts) {
+      foreach (var conflict in operConflicts)
+      {
         var newState = state.BuilderData.GetNextState(conflict);
         var reduceItems = state.BuilderData.ReduceItems.SelectByLookahead(conflict).ToList();
         if (newState == null || reduceItems.Count != 1)
@@ -49,7 +50,4 @@ namespace Irony.Parsing {
     }
 
   }//class
-
-
-
 }//namespace

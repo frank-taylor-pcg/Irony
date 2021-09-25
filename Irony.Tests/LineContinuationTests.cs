@@ -1,23 +1,23 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
   using NUnit.Framework;
   using TestClass = NUnit.Framework.TestFixtureAttribute;
-  using TestMethod = NUnit.Framework.TestAttribute;
   using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
   using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
   [TestClass]
-  public class LineContinuationTests {
+  public class LineContinuationTests
+  {
 
     [TestMethod]
-    public void TestContinuationTerminal_Simple() {
+    public void TestContinuationTerminal_Simple()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(new LineContinuationTerminal("LineContinuation", "\\"));
@@ -26,7 +26,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestContinuationTerminal_Default() {
+    public void TestContinuationTerminal_Default()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(new LineContinuationTerminal("LineContinuation"));
@@ -38,7 +39,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestContinuationTerminal_Complex() {
+    public void TestContinuationTerminal_Complex()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(new LineContinuationTerminal("LineContinuation", @"\continue", @"\cont", "++CONTINUE++"));
@@ -50,7 +52,8 @@ namespace Irony.Tests {
     }
 
     [TestMethod]
-    public void TestContinuationTerminal_Incomplete() {
+    public void TestContinuationTerminal_Incomplete()
+    {
       Parser parser; Token token;
 
       parser = TestHelper.CreateParser(new LineContinuationTerminal("LineContinuation"));

@@ -1,25 +1,25 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
 using Irony.Parsing;
+using System.Text.RegularExpressions;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
-    
+
   [TestClass]
-  public class RegexLiteralTests  {
+  public class RegexLiteralTests
+  {
 
     //The following test method and a fix are contributed by ashmind codeplex user
     [TestMethod]
-    public void TestRegExLiteral() {
+    public void TestRegExLiteral()
+    {
       Parser parser; Token token;
 
       var term = new RegexLiteral("RegEx");
@@ -30,7 +30,7 @@ namespace Irony.Tests {
       Assert.IsNotNull(token.Value, "Token Value field is null - should be Regex object.");
       var regex = token.Value as Regex;
       Assert.IsNotNull(regex, "Failed to create Regex object.");
-      var match = regex.Match(@"00abc\/de00"); 
+      var match = regex.Match(@"00abc\/de00");
       Assert.AreEqual(match.Index, 2, "Failed to match a regular expression");
     }
 

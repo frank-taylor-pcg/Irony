@@ -10,16 +10,17 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
   //This is a simple NewLine terminal recognizing line terminators for use in grammars for line-based languages like VB
   // instead of more complex alternative of using CodeOutlineFilter. 
-  public class NewLineTerminal : Terminal {
-    public NewLineTerminal(string name) : base(name, TokenCategory.Outline) {
+  public class NewLineTerminal : Terminal
+  {
+    public NewLineTerminal(string name) : base(name, TokenCategory.Outline)
+    {
       base.ErrorAlias = Resources.LabelLineBreak;  // "[line break]";
       this.Flags |= TermFlags.IsPunctuation;
     }
@@ -27,17 +28,20 @@ namespace Irony.Parsing {
     public string LineTerminators = "\n\r\v";
 
     #region overrides: Init, GetFirsts, TryMatch
-    public override void Init(GrammarData grammarData) {
+    public override void Init(GrammarData grammarData)
+    {
       base.Init(grammarData);
       Grammar.UsesNewLine = true; //That will prevent SkipWhitespace method from skipping new-line chars
     }
-    public override IList<string> GetFirsts() {
+    public override IList<string> GetFirsts()
+    {
       StringList firsts = new StringList();
-      foreach(char t in LineTerminators)
+      foreach (char t in LineTerminators)
         firsts.Add(t.ToString());
       return firsts;
     }
-    public override Token TryMatch(ParsingContext context, ISourceStream source) {
+    public override Token TryMatch(ParsingContext context, ISourceStream source)
+    {
       char current = source.PreviewChar;
       if (!LineTerminators.Contains(current)) return null;
       //Treat \r\n as a single terminator
@@ -51,6 +55,6 @@ namespace Irony.Parsing {
 
     #endregion
 
-    
+
   }//class
 }//namespace

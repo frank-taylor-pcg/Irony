@@ -10,44 +10,44 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using Irony.Ast;
 using Irony.Parsing;
 
-namespace Irony.Interpreter.Ast {
+namespace Irony.Interpreter.Ast
+{
+  public class ParamListNode : AstNode
+  {
 
-  public class ParamListNode : AstNode {
-
-    public override void Init(AstContext context, ParseTreeNode treeNode) {
+    public override void Init(AstContext context, ParseTreeNode treeNode)
+    {
       base.Init(context, treeNode);
       foreach (var child in treeNode.ChildNodes)
-        AddChild(NodeUseType.Parameter, "param", child); 
+        AddChild(NodeUseType.Parameter, "param", child);
       AsString = "param_list[" + ChildNodes.Count + "]";
     }
 
-    protected override object DoEvaluate(ScriptThread thread) {
+    protected override object DoEvaluate(ScriptThread thread)
+    {
       thread.CurrentNode = this;  //standard prolog
       // Is called once, at first evaluation of FunctionDefNode
       // Creates parameter slots
-      foreach (var child in this.ChildNodes) {
+      foreach (var child in this.ChildNodes)
+      {
         var idNode = child as IdentifierNode;
-        if (idNode != null) {
+        if (idNode != null)
+        {
           thread.CurrentScope.Info.AddSlot(idNode.Symbol, SlotType.Parameter);
         }
       }
       this.Evaluate = EvaluateAfter;
       thread.CurrentNode = Parent; //standard epilog
-      return null; 
+      return null;
     }//method
 
     // TODO: implement handling list/dict parameter tails (Scheme, Python, etc)
-    private object EvaluateAfter(ScriptThread thread) {
-      return null; 
+    private object EvaluateAfter(ScriptThread thread)
+    {
+      return null;
     }
   }//class
-
 }//namespace

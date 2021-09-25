@@ -10,24 +10,23 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Irony.Interpreter.Ast;
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
 
   // Implements fast access to a variable (local/global var or parameter) in local scope or in any enclosing scope
   // Important: the following code is very sensitive to even tiny changes - do not know exactly particular reasons. 
-  public sealed class SlotBinding : Binding {
+  public sealed class SlotBinding : Binding
+  {
     public SlotInfo Slot;
     public ScopeInfo FromScope;
     public int SlotIndex;
     public int StaticScopeIndex;
     public AstNode FromNode;
 
-    public SlotBinding(SlotInfo slot, AstNode fromNode, ScopeInfo fromScope) : base(slot.Name, BindingTargetType.Slot) {
+    public SlotBinding(SlotInfo slot, AstNode fromNode, ScopeInfo fromScope) : base(slot.Name, BindingTargetType.Slot)
+    {
       Slot = slot;
       FromNode = fromNode;
       FromScope = fromScope;
@@ -36,38 +35,50 @@ namespace Irony.Interpreter {
       SetupAccessorMethods();
     }
 
-    private void SetupAccessorMethods() {
+    private void SetupAccessorMethods()
+    {
       // Check module scope
-      if (Slot.ScopeInfo.StaticIndex >= 0) {
+      if (Slot.ScopeInfo.StaticIndex >= 0)
+      {
         GetValueRef = FastGetStaticValue;
-        SetValueRef = SetStatic; 
+        SetValueRef = SetStatic;
         return;
       }
       var levelDiff = Slot.ScopeInfo.Level - FromScope.Level;
-      switch (levelDiff) {
+      switch (levelDiff)
+      {
         case 0: // local scope 
-          if (Slot.Type == SlotType.Value) {
+          if (Slot.Type == SlotType.Value)
+          {
             base.GetValueRef = FastGetCurrentScopeValue;
             base.SetValueRef = SetCurrentScopeValue;
-          } else {
+          }
+          else
+          {
             base.GetValueRef = FastGetCurrentScopeParameter;
             base.SetValueRef = SetCurrentScopeParameter;
           }
-          return; 
+          return;
         case 1: //direct parent
-          if (Slot.Type == SlotType.Value) {
+          if (Slot.Type == SlotType.Value)
+          {
             base.GetValueRef = GetImmediateParentScopeValue;
             base.SetValueRef = SetImmediateParentScopeValue;
-          } else {
+          }
+          else
+          {
             base.GetValueRef = GetImmediateParentScopeParameter;
             base.SetValueRef = SetImmediateParentScopeParameter;
           }
           return;
         default: // some enclosing scope
-          if (Slot.Type == SlotType.Value) {
+          if (Slot.Type == SlotType.Value)
+          {
             base.GetValueRef = GetParentScopeValue;
             base.SetValueRef = SetParentScopeValue;
-          } else {
+          }
+          else
+          {
             base.GetValueRef = GetParentScopeParameter;
             base.SetValueRef = SetParentScopeParameter;
           }
@@ -84,119 +95,156 @@ namespace Irony.Interpreter {
     // to the owner Identifier node as a location of error. 
 
     // Current scope
-    private object FastGetCurrentScopeValue(ScriptThread thread) {
-      try {
+    private object FastGetCurrentScopeValue(ScriptThread thread)
+    {
+      try
+      {
         //optimization: we go directly for values array; if we fail, then we fallback to regular "proper" method.
         return thread.CurrentScope.Values[SlotIndex];
-      } catch {
+      }
+      catch
+      {
         return GetCurrentScopeValue(thread);
       }
     }
 
-    private object GetCurrentScopeValue(ScriptThread thread) {
-      try {
+    private object GetCurrentScopeValue(ScriptThread thread)
+    {
+      try
+      {
         return thread.CurrentScope.GetValue(SlotIndex);
-      } catch { thread.CurrentNode = FromNode; throw; }
+      }
+      catch { thread.CurrentNode = FromNode; throw; }
     }
 
 
-    private object FastGetCurrentScopeParameter(ScriptThread thread) {
+    private object FastGetCurrentScopeParameter(ScriptThread thread)
+    {
       //optimization: we go directly for parameters array; if we fail, then we fallback to regular "proper" method.
-      try {
+      try
+      {
         return thread.CurrentScope.Parameters[SlotIndex];
-      } catch {
+      }
+      catch
+      {
         return GetCurrentScopeParameter(thread);
       }
     }
-    private object GetCurrentScopeParameter(ScriptThread thread) {
-      try {
+    private object GetCurrentScopeParameter(ScriptThread thread)
+    {
+      try
+      {
         return thread.CurrentScope.GetParameter(SlotIndex);
-      } catch { thread.CurrentNode = FromNode; throw; }
+      }
+      catch { thread.CurrentNode = FromNode; throw; }
     }
 
-    private void SetCurrentScopeValue(ScriptThread thread, object value) {
+    private void SetCurrentScopeValue(ScriptThread thread, object value)
+    {
       thread.CurrentScope.SetValue(SlotIndex, value);
     }
 
-    private void SetCurrentScopeParameter(ScriptThread thread, object value) {
+    private void SetCurrentScopeParameter(ScriptThread thread, object value)
+    {
       thread.CurrentScope.SetParameter(SlotIndex, value);
     }
 
     // Static scope (module-level variables)
-    private object FastGetStaticValue(ScriptThread thread) {
-      try {
+    private object FastGetStaticValue(ScriptThread thread)
+    {
+      try
+      {
         return thread.App.StaticScopes[StaticScopeIndex].Values[SlotIndex];
-      } catch {
+      }
+      catch
+      {
         return GetStaticValue(thread);
       }
     }
-    private object GetStaticValue(ScriptThread thread) {
-      try {
+    private object GetStaticValue(ScriptThread thread)
+    {
+      try
+      {
         return thread.App.StaticScopes[StaticScopeIndex].GetValue(SlotIndex);
-      } catch { thread.CurrentNode = FromNode; throw; }
+      }
+      catch { thread.CurrentNode = FromNode; throw; }
     }
 
 
-    private void SetStatic(ScriptThread thread, object value) {
+    private void SetStatic(ScriptThread thread, object value)
+    {
       thread.App.StaticScopes[StaticScopeIndex].SetValue(SlotIndex, value);
     }
 
     // Direct parent
-    private object GetImmediateParentScopeValue(ScriptThread thread) {
-      try {
+    private object GetImmediateParentScopeValue(ScriptThread thread)
+    {
+      try
+      {
         return thread.CurrentScope.Parent.Values[SlotIndex];
-      } catch { }
+      }
+      catch { }
       //full method
-      try {
+      try
+      {
         return thread.CurrentScope.Parent.GetValue(SlotIndex);
-      } catch { thread.CurrentNode = FromNode; throw; }
+      }
+      catch { thread.CurrentNode = FromNode; throw; }
     }
 
-    private object GetImmediateParentScopeParameter(ScriptThread thread) {
-      try {
+    private object GetImmediateParentScopeParameter(ScriptThread thread)
+    {
+      try
+      {
         return thread.CurrentScope.Parent.Parameters[SlotIndex];
-      } catch { }
+      }
+      catch { }
       //full method
-      try {
+      try
+      {
         return thread.CurrentScope.Parent.GetParameter(SlotIndex);
-      } catch { thread.CurrentNode = FromNode; throw; }
+      }
+      catch { thread.CurrentNode = FromNode; throw; }
     }
 
-    private void SetImmediateParentScopeValue(ScriptThread thread, object value) {
+    private void SetImmediateParentScopeValue(ScriptThread thread, object value)
+    {
       thread.CurrentScope.Parent.SetValue(SlotIndex, value);
     }
 
-    private void SetImmediateParentScopeParameter(ScriptThread thread, object value) {
+    private void SetImmediateParentScopeParameter(ScriptThread thread, object value)
+    {
       thread.CurrentScope.Parent.SetParameter(SlotIndex, value);
     }
 
     // Generic case
-    private object GetParentScopeValue(ScriptThread thread) {
+    private object GetParentScopeValue(ScriptThread thread)
+    {
       var targetScope = GetTargetScope(thread);
       return targetScope.GetValue(SlotIndex);
     }
-    private object GetParentScopeParameter(ScriptThread thread) {
+    private object GetParentScopeParameter(ScriptThread thread)
+    {
       var targetScope = GetTargetScope(thread);
       return targetScope.GetParameter(SlotIndex);
     }
-    private void SetParentScopeValue(ScriptThread thread, object value) {
+    private void SetParentScopeValue(ScriptThread thread, object value)
+    {
       var targetScope = GetTargetScope(thread);
       targetScope.SetValue(SlotIndex, value);
     }
-    private void SetParentScopeParameter(ScriptThread thread, object value) {
+    private void SetParentScopeParameter(ScriptThread thread, object value)
+    {
       var targetScope = GetTargetScope(thread);
       targetScope.SetParameter(SlotIndex, value);
     }
-    private Scope GetTargetScope(ScriptThread thread) {
+    private Scope GetTargetScope(ScriptThread thread)
+    {
       var targetLevel = Slot.ScopeInfo.Level;
       var scope = thread.CurrentScope.Parent;
       while (scope.Info.Level > targetLevel)
         scope = scope.Parent;
       return scope;
     }
-
-
   }//class SlotReader
-
 }
-

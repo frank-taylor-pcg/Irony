@@ -10,14 +10,11 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Irony.Parsing;
-using Irony.Interpreter; 
 using Irony.Interpreter.Evaluator;
+using Irony.Parsing;
 
-namespace Irony.Samples {
+namespace Irony.Samples
+{
   //The purpose of this class is pure convenience - to make expression evaluator grammar (which is in Irony.Interpreter assembly) to appear 
   // with other sample grammars. 
   [Language("SampleExpressionEvaluator", "1.0", "Multi-line expression evaluator")]

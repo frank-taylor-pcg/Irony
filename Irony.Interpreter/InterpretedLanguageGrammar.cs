@@ -10,21 +10,19 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using Irony.Ast;
-using Irony.Parsing;
 using Irony.Interpreter.Ast;
+using Irony.Parsing;
 
-namespace Irony.Interpreter {
+namespace Irony.Interpreter
+{
   /// <summary> Base class for languages that use Irony Interpreter to execute scripts. </summary>
-  public abstract class InterpretedLanguageGrammar : Grammar, ICanRunSample {
-       // making the class abstract so it won't load into Grammar Explorer
+  public abstract class InterpretedLanguageGrammar : Grammar, ICanRunSample
+  {
+    // making the class abstract so it won't load into Grammar Explorer
     public InterpretedLanguageGrammar(bool caseSensitive)
-      : base(caseSensitive) {
+      : base(caseSensitive)
+    {
       this.LanguageFlags = LanguageFlags.CreateAst;
     }
 
@@ -38,8 +36,10 @@ namespace Irony.Interpreter {
     private ScriptApp _app;
     private ParseTree _prevSample;
 
-    public virtual string RunSample(RunSampleArgs args) {
-      if (_app == null || args.ParsedSample != _prevSample) {
+    public virtual string RunSample(RunSampleArgs args)
+    {
+      if (_app == null || args.ParsedSample != _prevSample)
+      {
         _app = new ScriptApp(args.Language);
         if (args.Console != null)
           _app.Console = args.Console;
@@ -47,15 +47,17 @@ namespace Irony.Interpreter {
       _prevSample = args.ParsedSample;
 
       //for (int i = 0; i < 1000; i++)  //for perf measurements, to execute 1000 times
-        _app.Evaluate(args.ParsedSample);
+      _app.Evaluate(args.ParsedSample);
       return _app.GetOutput();
     }
 
-    public virtual LanguageRuntime CreateRuntime(LanguageData language) {
+    public virtual LanguageRuntime CreateRuntime(LanguageData language)
+    {
       return new LanguageRuntime(language);
     }
 
-    public override void BuildAst(LanguageData language, ParseTree parseTree) {
+    public override void BuildAst(LanguageData language, ParseTree parseTree)
+    {
       var opHandler = new OperatorHandler(language.Grammar.CaseSensitive);
       Util.Check(!parseTree.HasErrors(), "ParseTree has errors, cannot build AST.");
       var astContext = new InterpreterAstContext(language, opHandler);
@@ -63,5 +65,4 @@ namespace Irony.Interpreter {
       astBuilder.BuildAst(parseTree);
     }
   } //grammar class
-
 }

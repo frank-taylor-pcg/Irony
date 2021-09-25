@@ -10,19 +10,19 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Irony.Parsing;
 
-namespace Irony.Samples {
+namespace Irony.Samples
+{
   //Sample grammar for lookaheads calculation
   // The grammar is from example 4.46 in Dragon book, p 241
   // LALR(1) items set for this grammar is provided in fig. 4.45 on page 245.
   // Note that the table in the book contains kernel-only items for each state,
   //  while we print out all items
-  class GrammarEx446  : Grammar {
-    public GrammarEx446() {
+  class GrammarEx446 : Grammar
+  {
+    public GrammarEx446()
+    {
       // A' is augmented root
       NonTerminal S = new NonTerminal("S");
       NonTerminal L = new NonTerminal("L");
@@ -34,7 +34,7 @@ namespace Irony.Samples {
       R.Rule = L;
       this.Root = S;
     }//method
-//Expected state set:
+     //Expected state set:
     /*
 State I0
     [S' -> ·S   ,  <EOF> ]

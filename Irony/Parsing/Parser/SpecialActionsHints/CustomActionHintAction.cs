@@ -10,27 +10,28 @@
  * **********************************************************************************/
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
   //These two delegates define custom methods that Grammar can implement to execute custom action
   public delegate void PreviewActionMethod(CustomParserAction action);
   public delegate void ExecuteActionMethod(ParsingContext context, CustomParserAction action);
 
-  public class CustomActionHint: GrammarHint {
+  public class CustomActionHint : GrammarHint
+  {
     private ExecuteActionMethod _executeMethod;
     private PreviewActionMethod _previewMethod;
 
-    public CustomActionHint(ExecuteActionMethod executeMethod, PreviewActionMethod previewMethod = null) {
+    public CustomActionHint(ExecuteActionMethod executeMethod, PreviewActionMethod previewMethod = null)
+    {
       _executeMethod = executeMethod;
       _previewMethod = previewMethod;
     }
 
-    public override void Apply(LanguageData language, Construction.LRItem owner) {
+    public override void Apply(LanguageData language, Construction.LRItem owner)
+    {
       //Create custom action and put it into state.Actions table
       var state = owner.State;
       var action = new CustomParserAction(language, state, _executeMethod);
@@ -43,7 +44,7 @@ namespace Irony.Parsing {
       else foreach (var lkh in owner.Lookaheads)
           state.Actions[lkh] = action;
       //We consider all conflicts handled by the action
-      state.BuilderData.Conflicts.Clear(); 
+      state.BuilderData.Conflicts.Clear();
     }//method
 
   }//Hint class
@@ -51,7 +52,8 @@ namespace Irony.Parsing {
 
   // CustomParserAction is in fact action selector: it allows custom Grammar code to select the action to execute from a set of 
   // shift/reduce actions available in this state.
-  public class CustomParserAction : ParserAction {
+  public class CustomParserAction : ParserAction
+  {
     public LanguageData Language;
     public ParserState State;
     public ExecuteActionMethod ExecuteRef;
@@ -61,7 +63,8 @@ namespace Irony.Parsing {
     public object CustomData;
 
     public CustomParserAction(LanguageData language, ParserState state,
-                                            ExecuteActionMethod executeRef) {
+                                            ExecuteActionMethod executeRef)
+    {
       Language = language;
       State = state;
       ExecuteRef = executeRef;
@@ -73,7 +76,8 @@ namespace Irony.Parsing {
         ReduceActions.Add(ReduceParserAction.Create(item.Core.Production));
     }
 
-    public override void Execute(ParsingContext context) {
+    public override void Execute(ParsingContext context)
+    {
       if (context.TracingEnabled)
         context.AddTrace(Resources.MsgTraceExecCustomAction);
       //States with DefaultAction do NOT read input, so we read it here
@@ -84,15 +88,16 @@ namespace Irony.Parsing {
       var oldInput = context.CurrentParserInput;
       ExecuteRef(context, this);
       //Prevent from falling into an infinite loop 
-      if (context.CurrentParserState == oldState && context.CurrentParserInput == oldInput) {
+      if (context.CurrentParserState == oldState && context.CurrentParserInput == oldInput)
+      {
         context.AddParserError(Resources.MsgErrorCustomActionDidNotAdvance);
-        context.Parser.RecoverFromError(); 
+        context.Parser.RecoverFromError();
       }
     }//method
 
-    public override string ToString() {
+    public override string ToString()
+    {
       return "CustomParserAction";
     }
   }//class
-
 }//ns

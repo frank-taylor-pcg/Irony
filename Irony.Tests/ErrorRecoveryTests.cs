@@ -1,26 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
 using Irony.Parsing;
 
-namespace Irony.Tests {
+namespace Irony.Tests
+{
 #if USE_NUNIT
-    using NUnit.Framework;
-    using TestClass = NUnit.Framework.TestFixtureAttribute;
-    using TestMethod = NUnit.Framework.TestAttribute;
-    using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using NUnit.Framework;
+  using TestClass = NUnit.Framework.TestFixtureAttribute;
+  using TestInitialize = NUnit.Framework.SetUpAttribute;
+  using TestMethod = NUnit.Framework.TestAttribute;
 #else
   using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
   [TestClass]
-  public class ErrorRecoveryTests {
+  public class ErrorRecoveryTests
+  {
 
     #region Grammars
     //A simple grammar for language consisting of simple assignment statements: x=y + z; z= t + m;
-    public class ErrorRecoveryGrammar : Grammar {
-      public ErrorRecoveryGrammar() {
+    public class ErrorRecoveryGrammar : Grammar
+    {
+      public ErrorRecoveryGrammar()
+      {
         var id = new IdentifierTerminal("id");
         var expr = new NonTerminal("expr");
         var stmt = new NonTerminal("stmt");
@@ -30,14 +30,15 @@ namespace Irony.Tests {
         stmtList.Rule = MakeStarRule(stmtList, stmt);
         stmt.Rule = id + "=" + expr + ";";
         stmt.ErrorRule = SyntaxError + ";";
-        expr.Rule = id | id + "+" + id; 
+        expr.Rule = id | id + "+" + id;
       }
     }// class
 
     #endregion
 
     [TestMethod]
-    public void TestErrorRecovery() {
+    public void TestErrorRecovery()
+    {
 
       var grammar = new ErrorRecoveryGrammar();
       var parser = new Parser(grammar);

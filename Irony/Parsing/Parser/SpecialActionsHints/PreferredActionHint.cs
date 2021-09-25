@@ -10,24 +10,25 @@
  * **********************************************************************************/
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Irony.Parsing.Construction;
 
-namespace Irony.Parsing {
+namespace Irony.Parsing
+{
 
-  public class PreferredActionHint : GrammarHint {
+  public class PreferredActionHint : GrammarHint
+  {
     PreferredActionType ActionType;
-    public PreferredActionHint(PreferredActionType actionType) {
+    public PreferredActionHint(PreferredActionType actionType)
+    {
       ActionType = actionType;
     }
-    public override void Apply(LanguageData language, LRItem owner) {
+    public override void Apply(LanguageData language, LRItem owner)
+    {
       var state = owner.State;
       var conflicts = state.BuilderData.Conflicts;
       if (conflicts.Count == 0) return;
-      switch (ActionType) {
+      switch (ActionType)
+      {
         case PreferredActionType.Shift:
           var currTerm = owner.Core.Current as Terminal;
           if (currTerm == null || !conflicts.Contains(currTerm)) return; //nothing to do
@@ -42,7 +43,8 @@ namespace Irony.Parsing {
           //we have a reduce item with "Reduce" hint. Check if any of lookaheads are in conflict
           ReduceParserAction reduceAction = null;
           foreach (var lkhead in owner.Lookaheads)
-            if (conflicts.Contains(lkhead)) {
+            if (conflicts.Contains(lkhead))
+            {
               if (reduceAction == null)
                 reduceAction = new ReduceParserAction(owner.Core.Production);
               state.Actions[lkhead] = reduceAction;
@@ -52,6 +54,4 @@ namespace Irony.Parsing {
       }//switch
     }//method
   }//class
-
-
 }
